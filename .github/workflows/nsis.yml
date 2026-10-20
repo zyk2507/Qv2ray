@@ -73,6 +73,15 @@ jobs:
           version: ${{ matrix.qt_version }}
           arch: ${{ matrix.qtarch }}
       # =========================================================================================================
+      - name: Install NSIS
+        shell: pwsh
+        run: |
+          choco install nsis --yes --no-progress
+          foreach ($path in @("${env:ProgramFiles(x86)}\NSIS", "$env:ProgramFiles\NSIS")) {
+            if (Test-Path $path) {
+              Add-Content -Path $env:GITHUB_PATH -Value $path
+            }
+          }
       - name: Win-${{ matrix.arch }} - ${{ matrix.qt_version }} - Setup Ninja
         uses: seanmiddleditch/gha-setup-ninja@v6
         with:

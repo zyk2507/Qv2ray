@@ -61,7 +61,7 @@ jobs:
         run: |
           apt-get install -y build-essential devscripts debhelper ninja-build libgrpc++-dev libprotobuf-dev protobuf-compiler-grpc qtbase5-dev qttools5-dev cmake pkg-config qtdeclarative5-dev libcurl4-openssl-dev libqt5svg5-dev
       - name: Patching source code
-        if: matrix.distro == 'stable'
+        if: matrix.distro == 'stable' || matrix.distro == 'bookworm'
         run: |
           patch -p1 < debian/0001-add-missing-macro.patch
       - name: Bump version
@@ -88,8 +88,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        distro: [stable]
-        arch: [arm64, armhf, mips64el]
+        include:
+          - distro: stable
+            arch: arm64
+          - distro: stable
+            arch: armhf
+          # Current Debian stable does not provide the gRPC/Qt development
+          # packages for mips64el.  Build that architecture against bookworm.
+          - distro: bookworm
+            arch: mips64el
     needs: check_commit_msg
     if: ${{ !contains( needs.check_commit_msg.outputs.commit_message, '!DEB') }}
     name: Build debian package for ${{ matrix.distro }} ${{ matrix.arch }}
@@ -113,7 +120,7 @@ jobs:
           apt-get update
           apt-get install -o APT::Immediate-Configure=0 -y build-essential crossbuild-essential-${{ matrix.arch }} devscripts debhelper ninja-build libgrpc++-dev:${{ matrix.arch }} libprotobuf-dev:${{ matrix.arch }} protobuf-compiler-grpc qtbase5-dev:${{ matrix.arch }} qttools5-dev:${{ matrix.arch }} cmake pkg-config qtdeclarative5-dev:${{ matrix.arch }} libcurl4-openssl-dev:${{ matrix.arch }} libqt5svg5-dev:${{ matrix.arch }}
       - name: Patching source code
-        if: matrix.distro == 'stable'
+        if: matrix.distro == 'stable' || matrix.distro == 'bookworm'
         run: |
           patch -p1 < debian/0001-add-missing-macro.patch
       - name: Bump version
