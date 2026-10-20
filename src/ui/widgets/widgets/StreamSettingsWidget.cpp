@@ -20,6 +20,7 @@
 #include <QMessageBox>
 #include <QPlainTextEdit>
 #include <QPushButton>
+#include <QScrollArea>
 #include <QSpinBox>
 #include <QVBoxLayout>
 
@@ -906,6 +907,40 @@ StreamSettingsWidget::StreamSettingsWidget(QWidget *parent) : QWidget(parent)
         stream = StreamSettingsObject::fromJson(json);
         SetStreamObject(stream);
     });
+
+    // TLS/REALITY, XHTTP, MASQUE, Hysteria and SOCKOPT have grown large enough
+    // that they can exceed the available height of the outbound editor.  Put
+    // every tab page into its own scroll area so controls are never squeezed
+    // together, regardless of the window height.
+    struct TabPageInfo
+    {
+        QWidget *page;
+        QString title;
+        QIcon icon;
+        QString toolTip;
+    };
+    const auto currentTab = tabWidget->currentIndex();
+    QList<TabPageInfo> tabPages;
+    while (tabWidget->count() > 0)
+    {
+        tabPages.append({ tabWidget->widget(0), tabWidget->tabText(0), tabWidget->tabIcon(0), tabWidget->tabToolTip(0) });
+        tabWidget->removeTab(0);
+    }
+    for (auto i = 0; i < tabPages.size(); i++)
+    {
+        const auto &info = tabPages.at(i);
+        auto scrollArea = new QScrollArea(tabWidget);
+        scrollArea->setObjectName(QStringLiteral("streamSettingsScrollArea_%1").arg(i));
+        scrollArea->setFrameShape(QFrame::NoFrame);
+        scrollArea->setWidgetResizable(true);
+        scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+        scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+        scrollArea->setWidget(info.page);
+        const auto index = tabWidget->addTab(scrollArea, info.icon, info.title);
+        tabWidget->setTabToolTip(index, info.toolTip);
+    }
+    if (tabWidget->count() > 0)
+        tabWidget->setCurrentIndex(std::clamp(currentTab, 0, tabWidget->count() - 1));
 }
 
 QvMessageBusSlotImpl(StreamSettingsWidget)
