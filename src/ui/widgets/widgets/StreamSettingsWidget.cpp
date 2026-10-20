@@ -26,6 +26,13 @@
 #include <limits>
 #include <optional>
 
+// The Windows SDK defines "interface" as a macro for COM declarations.  The
+// Xray sockopt field is also called "interface"; undefine the SDK macro so
+// the member access below compiles with MSVC.
+#ifdef interface
+#undef interface
+#endif
+
 #define QV_MODULE_NAME "StreamSettingsWidget"
 
 namespace
