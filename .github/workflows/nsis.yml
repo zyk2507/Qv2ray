@@ -15,12 +15,13 @@ jobs:
     name: Check if the workflow has been disabled.
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Get commit message
         id: get_message
         run: |
-          echo "::set-output name=message::$(git log --format=%B -n 1 ${{ github.event.after }} | tr '\n' ' ')"
-          echo "message=\"$(git log --format=%B -n 1 ${{ github.event.after }} | tr '\n' ' ')\"" >> $GITHUB_ENV
+          MESSAGE="$(git log --format=%B -n 1 ${{ github.event.after }} | tr '\n' ' ')"
+          echo "message=$MESSAGE" >> $GITHUB_OUTPUT
+          echo "message=\"$MESSAGE\"" >> $GITHUB_ENV
   build:
     needs: check_commit_msg
     if: ${{ !contains( needs.check_commit_msg.outputs.commit_message, '!NSIS') }}
@@ -45,13 +46,13 @@ jobs:
       - name: Get the version
         id: get_version
         shell: bash
-        run: echo ::set-output name=VERSION::$(echo $GITHUB_REF | cut -d / -f 3)
+        run: echo "VERSION=$(echo $GITHUB_REF | cut -d / -f 3)" >> $GITHUB_OUTPUT
       - name: Checking out sources
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           submodules: 'recursive'
       - name: Install Python 3.7 version
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v5
         with:
           python-version: "3.7"
           architecture: ${{ matrix.arch }}
@@ -64,7 +65,7 @@ jobs:
           arch: ${{ matrix.arch }}
       - name: Cache Qt
         id: cache-qt
-        uses: actions/cache@v1
+        uses: actions/cache@v4
         with:
           path: ../Qt
           key: QtCache-${{ matrix.platform }}-${{ matrix.arch }}-${{ matrix.qt_version }}
@@ -101,9 +102,9 @@ jobs:
         shell: bash
         id: get_package
         run: |
-          echo ::set-output name=NAME::$(basename build/qv2ray-*.exe)
+          echo "NAME=$(basename build/qv2ray-*.exe)" >> $GITHUB_OUTPUT
       - name: Win-${{ matrix.arch }} - ${{ matrix.qt_version }} - uploading artifact
-        uses: actions/upload-artifact@master
+        uses: actions/upload-artifact@v4
         with:
           name: Qv2ray-${{ github.sha }}.Windows-${{ matrix.arch }}.qt${{ matrix.qt_version }}.exe
           path: build/${{ steps.get_package.outputs.NAME }}
