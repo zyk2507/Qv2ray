@@ -62,7 +62,7 @@ jobs:
       - name: Install Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.7"
+          python-version: "3.11"
           architecture: x64
       - name: Cache Qt
         id: cache-qt
@@ -73,6 +73,9 @@ jobs:
       - name: Installing Qt
         uses: jurplel/install-qt-action@v2
         with:
+          setup-python: false
+          aqtversion: '==3.1.*'
+          py7zrversion: '==0.20.*'
           version: ${{ matrix.qt_version }}
           arch: ${{ matrix.qtarch }}
           cached: ${{ steps.cache-qt.outputs.cache-hit }}

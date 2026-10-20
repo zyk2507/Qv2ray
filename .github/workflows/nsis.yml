@@ -51,10 +51,10 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: 'recursive'
-      - name: Install Python 3.7 version
+      - name: Install Python 3.11 version
         uses: actions/setup-python@v5
         with:
-          python-version: "3.7"
+          python-version: "3.11"
           architecture: ${{ matrix.arch }}
       # =========================================================================================================
       - name: Install MSVC compiler
@@ -72,6 +72,9 @@ jobs:
       - name: Installing Qt - ${{ matrix.arch }}
         uses: jurplel/install-qt-action@v2
         with:
+          setup-python: false
+          aqtversion: '==3.1.*'
+          py7zrversion: '==0.20.*'
           version: ${{ matrix.qt_version }}
           arch: ${{ matrix.qtarch }}
           mirror: "http://mirrors.ocf.berkeley.edu/qt/"
