@@ -122,6 +122,7 @@ jobs:
           mkdir build
           cd build
           cmake .. -GNinja \
+            -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
             -DCMAKE_INSTALL_PREFIX=installed \
             -DQV2RAY_UI_TYPE=${{ matrix.ui_type }} \
             -DQV2RAY_QT6=ON \
@@ -144,6 +145,7 @@ jobs:
           mkdir build
           cd build
           cmake .. -GNinja \
+            -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
             -DQV2RAY_UI_TYPE=${{ matrix.ui_type }} \
             -DQV2RAY_QT6=ON \
             -DCMAKE_INSTALL_PREFIX=./deployment \
@@ -159,6 +161,7 @@ jobs:
           mkdir build
           cd build
           cmake .. -GNinja \
+            -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
             -DQV2RAY_UI_TYPE=${{ matrix.ui_type }} \
             -DQV2RAY_QT6=ON \
             -DCMAKE_INSTALL_PREFIX=./AppDir/usr \
