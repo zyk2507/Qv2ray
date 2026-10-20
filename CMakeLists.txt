@@ -1,5 +1,12 @@
 cmake_minimum_required(VERSION 3.10.1)
 
+# CMake 4 no longer accepts dependencies that declare a minimum version below
+# 3.5.  The bundled libuv still declares 3.4, so opt into the compatibility
+# policy for legacy subprojects before they are included.
+if(CMAKE_VERSION VERSION_GREATER_EQUAL "4.0" AND NOT DEFINED CMAKE_POLICY_VERSION_MINIMUM)
+    set(CMAKE_POLICY_VERSION_MINIMUM 3.5 CACHE STRING "Minimum policy version for legacy dependencies" FORCE)
+endif()
+
 file(STRINGS "${CMAKE_SOURCE_DIR}/makespec/VERSION" QV2RAY_VERSION)
 file(STRINGS "${CMAKE_SOURCE_DIR}/makespec/BUILDVERSION" QV2RAY_BUILD_VERSION)
 file(STRINGS "${CMAKE_SOURCE_DIR}/makespec/VERSIONSUFFIX" QV2RAY_VERSION_SUFFIX)

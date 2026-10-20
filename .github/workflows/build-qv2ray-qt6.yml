@@ -95,7 +95,7 @@ jobs:
       # --------------------------------------------------------
       - name: Win - ${{ matrix.qt_version }} - Setup Ninja
         if: matrix.platform == 'windows-latest'
-        uses: ashutoshvarma/setup-ninja@master
+        uses: seanmiddleditch/gha-setup-ninja@v6
         with:
           # ninja version to download. Default: 1.10.0
           version: 1.10.0
@@ -110,7 +110,7 @@ jobs:
       - uses: actions/setup-node@v4
         if: matrix.platform == 'macos-latest'
         with:
-          node-version: "12.x"
+          node-version: "18.x"
       - run: npm install -g appdmg
         if: matrix.platform == 'macos-latest'
       - name: macOS - ${{ matrix.qt_version }} - Generate Dependencies and Build
@@ -198,7 +198,7 @@ jobs:
           name: Qv2ray-${{ github.sha }}.linux-${{ matrix.ui_type }}.qt${{ matrix.qt_version }}-${{ matrix.build_type }}.AppImage
           path: build/Qv2ray.AppImage
       - name: Linux - ${{ matrix.qt_version }} - Upload binaries to release
-        uses: svenstaro/upload-release-action@v1-release
+        uses: svenstaro/upload-release-action@v2
         if: false #github.event_name == 'release' && matrix.platform == 'ubuntu-20.04' && matrix.ui_type == 'QWidget' && matrix.qt_version == '6.0.0' && matrix.build_type == 'Release'
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
@@ -214,7 +214,7 @@ jobs:
           name: Qv2ray-${{ github.sha }}.macOS-${{ matrix.ui_type }}.qt${{ matrix.qt_version }}-${{ matrix.build_type }}.dmg
           path: Qv2ray.dmg
       - name: macOS - ${{ matrix.qt_version }} - Upload binaries to release
-        uses: svenstaro/upload-release-action@v1-release
+        uses: svenstaro/upload-release-action@v2
         if: github.event_name == 'release' && matrix.platform == 'macos-latest' && matrix.ui_type == 'QWidget' && matrix.qt_version == '6.0.0' && matrix.build_type == 'Release'
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
@@ -225,10 +225,11 @@ jobs:
       # --------------------------------------------------------
       - name: Win - ${{ matrix.qt_version }} - Create 7z Release
         if: matrix.platform == 'windows-latest'
-        uses: DuckSoft/create-7z-action@v1.0
-        with:
-          pathSource: ./build/deployment/
-          pathTarget: ./release.7z
+        shell: pwsh
+        run: |
+          Push-Location ./build/deployment
+          7z a "$env:GITHUB_WORKSPACE/release.7z" .\*
+          Pop-Location
       - name: Win - ${{ matrix.qt_version }} - Uploading Artifact
         if: matrix.platform == 'windows-latest'
         uses: actions/upload-artifact@v4
@@ -236,7 +237,7 @@ jobs:
           name: Qv2ray-${{ github.sha }}.Windows-${{ matrix.ui_type }}.qt${{ matrix.qt_version }}-${{ matrix.build_type }}.7z
           path: release.7z
       - name: Win - ${{ matrix.qt_version }} - Upload binaries to release
-        uses: svenstaro/upload-release-action@v1-release
+        uses: svenstaro/upload-release-action@v2
         if: github.event_name == 'release' && matrix.platform == 'windows-latest' && matrix.ui_type == 'QWidget' && matrix.qt_version == '6.0.0' && matrix.build_type == 'Release'
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
