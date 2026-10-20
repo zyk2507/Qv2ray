@@ -1,6 +1,7 @@
 #include "KernelInstanceHandler.hpp"
 
 #include "components/port/QvPortDetector.hpp"
+#include "core/CoreUtils.hpp"
 #include "core/connection/Generation.hpp"
 #include "utils/QvHelpers.hpp"
 
@@ -72,8 +73,10 @@ namespace Qv2ray::core::handler
         }
     }
 
-    std::optional<QString> KernelInstanceHandler::StartConnection(const ConnectionGroupPair &id, CONFIGROOT fullConfig)
+    std::optional<QString> KernelInstanceHandler::StartConnection(const ConnectionGroupPair &id, CONFIGROOT fullConfig, Qv2rayCoreType coreType)
     {
+        if (coreType == CORE_AUTO)
+            coreType = GetCoreTypeForConfig(fullConfig);
         StopConnection();
         inboundInfo = GetInboundInfo(fullConfig);
         //
@@ -175,8 +178,8 @@ namespace Qv2ray::core::handler
                 }
                 currentId = id;
                 //
-                // Also start V2Ray-core.
-                auto result = vCoreInstance->StartConnection(fullConfig);
+                // Also start V2Ray-core / Xray-core.
+                auto result = vCoreInstance->StartConnection(fullConfig, coreType);
                 //
                 if (result.has_value())
                 {
@@ -238,9 +241,9 @@ namespace Qv2ray::core::handler
             }
             else
             {
-                LOG("Starting V2Ray without plugin.");
+                LOG("Starting V2Ray/Xray without plugin.");
                 currentId = id;
-                auto result = vCoreInstance->StartConnection(fullConfig);
+                auto result = vCoreInstance->StartConnection(fullConfig, coreType);
                 if (result.has_value())
                 {
                     PluginHost->SendEvent({ GetDisplayName(id.connectionId), inboundPorts, Events::Connectivity::Disconnected });

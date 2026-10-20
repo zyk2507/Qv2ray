@@ -214,6 +214,12 @@ namespace Qv2ray::core::config
 
             GlobalConfig.kernelConfig.KernelPath(QV2RAY_DEFAULT_VCORE_PATH);
             GlobalConfig.kernelConfig.AssetsPath(QV2RAY_DEFAULT_VASSETS_PATH);
+#ifdef QV2RAY_DEFAULT_XRAY_CORE_PATH
+            GlobalConfig.kernelConfig.XrayKernelPath(QV2RAY_DEFAULT_XRAY_CORE_PATH);
+#endif
+#ifdef QV2RAY_DEFAULT_XRAY_ASSETS_PATH
+            GlobalConfig.kernelConfig.XrayAssetsPath(QV2RAY_DEFAULT_XRAY_ASSETS_PATH);
+#endif
             GlobalConfig.logLevel = 3;
             GlobalConfig.uiConfig.language = QLocale::system().name();
             GlobalConfig.defaultRouteConfig.dnsConfig.servers.append({ "1.1.1.1" });

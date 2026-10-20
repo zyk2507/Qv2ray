@@ -11,9 +11,13 @@ using grpc::Status;
 namespace Qv2ray::core::kernel
 {
     constexpr auto Qv2ray_GRPC_ERROR_RETCODE = -1;
-    static QvAPIDataTypeConfig DefaultInboundAPIConfig{ { API_INBOUND, { "dokodemo-door", "http", "socks" } } };
+    static QvAPIDataTypeConfig DefaultInboundAPIConfig{
+        { API_INBOUND, { "dokodemo-door", "http", "socks", "mixed", "vmess", "vless", "trojan", "shadowsocks", "hysteria", "hysteria2",
+                         "wireguard" } }
+    };
     static QvAPIDataTypeConfig DefaultOutboundAPIConfig{ { API_OUTBOUND_PROXY,
-                                                           { "dns", "http", "mtproto", "shadowsocks", "socks", "vmess", "vless", "trojan" } },
+                                                           { "dns", "http", "mtproto", "shadowsocks", "socks", "vmess", "vless", "trojan",
+                                                             "hysteria", "hysteria2", "wireguard", "masque" } },
                                                          { API_OUTBOUND_DIRECT, { "freedom" } },
                                                          { API_OUTBOUND_BLACKHOLE, { "blackhole" } } };
 

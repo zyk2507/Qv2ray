@@ -15,7 +15,7 @@ namespace Qv2ray::core::handler
         explicit KernelInstanceHandler(QObject *parent = nullptr);
         ~KernelInstanceHandler();
 
-        std::optional<QString> StartConnection(const ConnectionGroupPair &id, CONFIGROOT root);
+        std::optional<QString> StartConnection(const ConnectionGroupPair &id, CONFIGROOT root, Qv2rayCoreType coreType = CORE_AUTO);
         void StopConnection();
         const ConnectionGroupPair CurrentConnection() const
         {

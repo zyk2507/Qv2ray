@@ -1,8 +1,11 @@
 #pragma once
-#include "base/Qv2rayBase.hpp"
+// Include protobuf/gRPC first: recent protobuf versions import Abseil's LOG
+// macro, which must be visible before Qv2ray's own logging macro is defined.
 #include "v2ray_api.grpc.pb.h"
 
 #include <grpc++/grpc++.h>
+
+#include "base/Qv2rayBase.hpp"
 
 // Check 10 times before telling user that API has failed.
 constexpr auto QV2RAY_API_CALL_FAILEDCHECK_THRESHOLD = 30;

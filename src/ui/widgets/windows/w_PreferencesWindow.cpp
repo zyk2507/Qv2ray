@@ -20,7 +20,10 @@
 #include <QFileDialog>
 #include <QHostInfo>
 #include <QInputDialog>
+#include <QHBoxLayout>
+#include <QLineEdit>
 #include <QMessageBox>
+#include <QPushButton>
 
 using Qv2ray::common::validation::IsIPv4Address;
 using Qv2ray::common::validation::IsIPv6Address;
@@ -54,6 +57,59 @@ PreferencesWindow::PreferencesWindow(QWidget *parent) : QvDialog("PreferenceWind
     addStateOptions("y", { [&] { return y(); }, [&](QJsonValue val) { move(x(), val.toInt()); } });
 
     setupUi(this);
+    //
+    // Let users override core detection.  AUTO normally works by looking at
+    // the executable name and the version output.
+    coreTypeCombo = new QComboBox(this);
+    coreTypeCombo->addItem(tr("Auto Detect"), CORE_AUTO);
+    coreTypeCombo->addItem(tr("v2ray-core"), CORE_V2RAY);
+    coreTypeCombo->addItem(tr("Xray-core"), CORE_XRAY);
+    formLayout_10->insertRow(0, tr("Core Type"), coreTypeCombo);
+    connect(coreTypeCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &PreferencesWindow::on_coreTypeCombo_currentIndexChanged);
+    //
+    // Xray-core is required for VLESS/REALITY/XHTTP and v2ray-core is used
+    // for VMess.  Both executables can be configured independently.
+    {
+        xrayCorePathTxt = new QLineEdit(this);
+        auto xrayCorePathBtn = new QPushButton(tr("Browse"), this);
+        auto xrayCorePathLayout = new QHBoxLayout();
+        xrayCorePathLayout->addWidget(xrayCorePathTxt);
+        xrayCorePathLayout->addWidget(xrayCorePathBtn);
+        formLayout_10->insertRow(1, tr("Xray Core Path"), xrayCorePathLayout);
+        connect(xrayCorePathTxt, &QLineEdit::textEdited, this, [this](const QString &arg1) {
+            NEEDRESTART
+            CurrentConfig.kernelConfig.XrayKernelPath(arg1);
+        });
+        connect(xrayCorePathBtn, &QPushButton::clicked, this, [this]() {
+            const auto core = QFileDialog::getOpenFileName(this, tr("Open Xray core file"), QDir::currentPath());
+            if (!core.isEmpty())
+            {
+                xrayCorePathTxt->setText(core);
+                NEEDRESTART
+                CurrentConfig.kernelConfig.XrayKernelPath(core);
+            }
+        });
+
+        xrayCoreAssetsPathTxt = new QLineEdit(this);
+        auto xrayAssetsPathBtn = new QPushButton(tr("Browse"), this);
+        auto xrayAssetsPathLayout = new QHBoxLayout();
+        xrayAssetsPathLayout->addWidget(xrayCoreAssetsPathTxt);
+        xrayAssetsPathLayout->addWidget(xrayAssetsPathBtn);
+        formLayout_10->insertRow(2, tr("Xray Assets Path"), xrayAssetsPathLayout);
+        connect(xrayCoreAssetsPathTxt, &QLineEdit::textEdited, this, [this](const QString &arg1) {
+            NEEDRESTART
+            CurrentConfig.kernelConfig.XrayAssetsPath(arg1);
+        });
+        connect(xrayAssetsPathBtn, &QPushButton::clicked, this, [this]() {
+            const auto dir = QFileDialog::getExistingDirectory(this, tr("Open Xray assets folder"), QDir::currentPath());
+            if (!dir.isEmpty())
+            {
+                xrayCoreAssetsPathTxt->setText(dir);
+                NEEDRESTART
+                CurrentConfig.kernelConfig.XrayAssetsPath(dir);
+            }
+        });
+    }
     //
     QvMessageBusConnect(PreferencesWindow);
     textBrowser->setHtml(StringFromFile(":/assets/credit.html"));
@@ -192,6 +248,9 @@ PreferencesWindow::PreferencesWindow(QWidget *parent) : QvDialog("PreferenceWind
     {
         vCorePathTxt->setText(CurrentConfig.kernelConfig.KernelPath());
         vCoreAssetsPathTxt->setText(CurrentConfig.kernelConfig.AssetsPath());
+        xrayCorePathTxt->setText(CurrentConfig.kernelConfig.XrayKernelPath());
+        xrayCoreAssetsPathTxt->setText(CurrentConfig.kernelConfig.XrayAssetsPath());
+        coreTypeCombo->setCurrentIndex(std::max(0, coreTypeCombo->findData(CurrentConfig.kernelConfig.coreType)));
         enableAPI->setChecked(CurrentConfig.kernelConfig.enableAPI);
         statsPortBox->setValue(CurrentConfig.kernelConfig.statsPort);
         //
@@ -580,6 +639,12 @@ void PreferencesWindow::on_bypassBTCb_stateChanged(int arg1)
     CurrentConfig.defaultRouteConfig.connectionConfig.bypassBT = arg1 == Qt::Checked;
 }
 
+void PreferencesWindow::on_coreTypeCombo_currentIndexChanged(int)
+{
+    NEEDRESTART
+    CurrentConfig.kernelConfig.coreType = static_cast<Qv2rayCoreType>(coreTypeCombo->currentData().toInt());
+}
+
 void PreferencesWindow::on_statsPortBox_valueChanged(int arg1)
 {
     NEEDRESTART
@@ -793,6 +858,29 @@ void PreferencesWindow::on_checkVCoreSettings_clicked()
     {
         const auto content = tr("V2Ray path configuration check passed.") + NEWLINE + NEWLINE + tr("Current version of V2Ray is: ") + NEWLINE + *msg;
         QvMessageBoxInfo(this, tr("V2Ray Core Settings"), content);
+    }
+
+    // A separate Xray-core path is optional, but validate it when present.
+    const auto xrayPath = xrayCorePathTxt ? xrayCorePathTxt->text() : QString();
+    auto xrayAssetsPath = xrayCoreAssetsPathTxt ? xrayCoreAssetsPathTxt->text() : QString();
+    if (xrayAssetsPath.isEmpty())
+        xrayAssetsPath = vCoreAssetsPathTxt->text();
+    if (!xrayPath.isEmpty())
+    {
+        if (const auto &&[result, msg] = V2RayKernelInstance::ValidateKernel(xrayPath, xrayAssetsPath); !result)
+        {
+            QvMessageBoxWarn(this, tr("Xray Core Settings"), *msg);
+        }
+        else if (!msg->toLower().contains("xray"))
+        {
+            QvMessageBoxWarn(this, tr("Xray Core Settings"),
+                             tr("This does not seem like an output from Xray-core.") + NEWLINE + NEWLINE + tr("Output:") + NEWLINE + *msg);
+        }
+        else
+        {
+            QvMessageBoxInfo(this, tr("Xray Core Settings"),
+                             tr("Xray path configuration check passed.") + NEWLINE + NEWLINE + tr("Current version of Xray is: ") + NEWLINE + *msg);
+        }
     }
 }
 

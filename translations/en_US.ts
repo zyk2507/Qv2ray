@@ -401,6 +401,42 @@ This entry is ignored by V2Ray core when using DoH servers.</source>
         <source>Fake DNS Pool Size</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Advanced DNS Options</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Disable fallback if any domain matches</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enable parallel query</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Use system hosts file</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Serve stale records</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Serve expired TTL</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Domain matcher</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Cache strategy</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Fallback strategy</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>GroupManager</name>
@@ -1231,6 +1267,14 @@ This entry is ignored by V2Ray core when using DoH servers.</source>
         <source>Please use the JsonEditor or reload the plugin.</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>XUDP Concurrency</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>XUDP Proxy UDP443</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>PluginManageWindow</name>
@@ -1995,6 +2039,58 @@ Qv2ray will give a more accurate latency value if Enabled, but makes it easy to 
 This option may be useful for some desktop environments without tray support.</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Auto Detect</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>v2ray-core</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Xray-core</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Core Type</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Browse</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Xray Core Path</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Open Xray core file</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Xray Assets Path</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Open Xray assets folder</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Xray Core Settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>This does not seem like an output from Xray-core.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Xray path configuration check passed.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Current version of Xray is: </source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>QObject</name>
@@ -2382,6 +2478,74 @@ This option may be useful for some desktop environments without tray support.</s
         <source>missing uuid</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>TLS Certificate Editor</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Add</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Remove</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Browse</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>PEM certificate contents (one certificate per line is also accepted)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>PEM private key contents</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>One time loading</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Build certificate chain</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Usage</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Certificate File</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Key File</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Certificate PEM</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Key PEM</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>OCSP Stapling</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>inline certificate</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Open Certificate File</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Open Private Key File</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>Qv2ray::Qv2rayWidgetApplication</name>
@@ -2583,10 +2747,6 @@ Maybe you have downloaded the wrong core?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Configuration Error</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Invalid V2Ray Instance Status.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2596,6 +2756,18 @@ Maybe you have downloaded the wrong core?</source>
     </message>
     <message>
         <source>V2Ray kernel failed to start: </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>No core executable is configured for %1.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to start core process: </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Core configuration test failed.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -3271,6 +3443,510 @@ Maybe you have downloaded the wrong core?</source>
         <source>TCP Keepalive Interval</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Apply JSON</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Full streamSettings JSON (including Xray-only fields):</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Advanced JSON</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Invalid JSON</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>REALITY Public Key</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>REALITY Short ID</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>REALITY SpiderX</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>REALITY Fingerprint</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>REALITY Private Key (server)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>REALITY Target (server)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Authority</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Congestion Window Multiplier</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Max Sending Window</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>TCP MPTCP</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>IPv6 only</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Domain Strategy</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Dialer Proxy</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>TCP Congestion</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Bind Interface</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>TCP User Timeout</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Basic</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Header|Value, one per line</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Padding</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>e.g. 100-1000</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Obfuscate padding</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Padding Bytes</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Padding Key</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Padding Header</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Padding Placement</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Padding Method</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Session</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>e.g. 8-16</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>e.g. 4096-8192</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Session ID Placement</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Session ID Key</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Session ID Table</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Session ID Length</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Sequence Placement</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Sequence Key</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Uplink Data Placement</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Uplink Data Key</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Uplink Chunk Size</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Uplink HTTP Method</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Server/Client</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>No gRPC header</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>No SSE header</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>e.g. 1000000</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>e.g. 30-30</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>e.g. 20-80</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Max Each Post Bytes</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Min Posts Interval (ms)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Max Buffered Posts</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Stream Up Server Secs</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Server Max Header Bytes</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Xmux</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Max Concurrency</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Max Connections</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>C Max Reuse Times</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>H Max Request Times</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>H Max Reusable Secs</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>H Keep Alive Period</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Advanced</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Full StreamSettings JSON for downloadSettings; not allowed in stream-one mode</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Raw JSON object used as XHTTP &quot;extra&quot;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>downloadSettings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>extra</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Accept PROXY protocol</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Rewrite Host</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Add X-Forwarded headers</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Insecure TLS for proxy target</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Version</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Auth</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>UDP Idle Timeout</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Masquerade Type</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Masquerade Dir</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Masquerade URL</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Masquerade Content</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Masquerade Headers</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Masquerade Status Code</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Use UDP extension</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Ignore client bandwidth</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Password</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Congestion Type</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Up Mbps</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Down Mbps</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>User</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>WARP</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>One address per line</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Private Key</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Public Key</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Address</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>REALITY Server Options</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Show REALITY diagnostics</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>One server name per line</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>One short ID per line</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Master Key Log</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Dest</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Xver</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Server Names</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Min Client Version</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Max Client Version</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Max Time Diff</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Short IDs</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>ML-DSA-65 Seed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Limit Fallback Upload After Bytes</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Limit Fallback Upload Bytes/Sec</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Limit Fallback Upload Burst Bytes/Sec</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Limit Fallback Download After Bytes</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Limit Fallback Download Bytes/Sec</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Limit Fallback Download Burst Bytes/Sec</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Edit TLS certificates</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>One secret per line (Google Drive needs ClientID, ClientSecret, RefreshToken)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Remote Folder</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Service</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Secrets</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Tuning</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Segment Bytes</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Flush Interval (ms)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Poll Interval (ms)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Max Poll Interval (ms)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Session TTL (seconds)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Concurrency</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Eager Window (ms)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Hole Timeout (ms)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Template</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>JSON template object (service=template)</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>w_GroupManager</name>
@@ -3722,11 +4398,7 @@ Maybe you have downloaded the wrong core?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>&lt;h3&gt;Notes for &lt;code&gt;udp443&lt;/code&gt; Methods&lt;/h3&gt;
-
-&lt;p&gt;Some applications like Google Chrome would attempt to use QUIC protocol instead of TLS, which, won&apos;t benefit from XTLS at all. What&apos;s worse, QUIC over TCP will cause potential congestion control problem, downgrading your experience.&lt;/p&gt;
-
-&lt;p&gt;Non-&lt;code&gt;udp443&lt;/code&gt; methods block UDP 443 outbound traffic to workaround this situation. If you do want to let it go, use at your own peril.&lt;/p&gt;</source>
+        <source>VLESS flow. Use xtls-rprx-vision with TLS or REALITY.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

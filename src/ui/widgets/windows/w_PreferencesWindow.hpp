@@ -64,6 +64,7 @@ class PreferencesWindow
     void on_bypassCNCb_stateChanged(int arg1);
     void on_bypassBTCb_stateChanged(int arg1);
     void on_statsPortBox_valueChanged(int arg1);
+    void on_coreTypeCombo_currentIndexChanged(int index);
     void on_socksUDPCB_stateChanged(int arg1);
     void on_socksUDPIP_textEdited(const QString &arg1);
     void on_selectVCoreBtn_clicked();
@@ -154,6 +155,9 @@ class PreferencesWindow
     //
     bool NeedRestart = false;
     bool finishedLoading = false;
+    QComboBox *coreTypeCombo = nullptr;
+    QLineEdit *xrayCorePathTxt = nullptr;
+    QLineEdit *xrayCoreAssetsPathTxt = nullptr;
     Qv2rayConfigObject CurrentConfig;
 
   private:

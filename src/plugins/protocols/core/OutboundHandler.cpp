@@ -2,6 +2,7 @@
 
 #include "3rdparty/QJsonStruct/QJsonIO.hpp"
 
+#include <QJsonDocument>
 #include <QUrl>
 #include <QUrlQuery>
 
@@ -88,12 +89,21 @@ const QString BuiltinSerializer::SerializeOutbound(const QString &protocol, cons
         const auto encryption = QJsonIO::GetValue(obj, { "vnext", 0, "users", 0, "encryption" }).toString("none");
         if (encryption != "none")
             query.addQueryItem("encryption", encryption);
+        const auto flow = QJsonIO::GetValue(obj, { "vnext", 0, "users", 0, "flow" }).toString();
+        if (!flow.isEmpty())
+            query.addQueryItem("flow", flow);
 
-        const auto network = QJsonIO::GetValue(objStream, "network").toString("tcp");
+        auto network = QJsonIO::GetValue(objStream, "network").toString("tcp");
+        if (network == "raw")
+            network = "tcp";
+        if (network == "splithttp")
+            network = "xhttp";
         if (network != "tcp")
             query.addQueryItem("type", network);
 
-        const auto security = QJsonIO::GetValue(objStream, "security").toString("none");
+        auto security = QJsonIO::GetValue(objStream, "security").toString("none");
+        if (security == "xtls")
+            security = "tls";
         if (security != "none")
             query.addQueryItem("security", security);
 
@@ -128,8 +138,33 @@ const QString BuiltinSerializer::SerializeOutbound(const QString &protocol, cons
             const auto path = QJsonIO::GetValue(objStream, { "wsSettings", "path" }).toString("/");
             query.addQueryItem("path", QUrl::toPercentEncoding(path));
 
-            const auto host = QJsonIO::GetValue(objStream, { "wsSettings", "headers", "Host" }).toString();
-            query.addQueryItem("host", host);
+            const auto host = QJsonIO::GetValue(objStream, { "wsSettings", "host" })
+                                  .toString(QJsonIO::GetValue(objStream, { "wsSettings", "headers", "Host" }).toString());
+            if (!host.isEmpty())
+                query.addQueryItem("host", host);
+        }
+        else if (network == "httpupgrade")
+        {
+            const auto path = QJsonIO::GetValue(objStream, { "httpupgradeSettings", "path" }).toString("/");
+            query.addQueryItem("path", QUrl::toPercentEncoding(path));
+            const auto host = QJsonIO::GetValue(objStream, { "httpupgradeSettings", "host" }).toString();
+            if (!host.isEmpty())
+                query.addQueryItem("host", host);
+        }
+        else if (network == "xhttp")
+        {
+            const auto &key = "xhttpSettings";
+            const auto path = QJsonIO::GetValue(objStream, { key, "path" }).toString("/");
+            query.addQueryItem("path", QUrl::toPercentEncoding(path));
+            const auto host = QJsonIO::GetValue(objStream, { key, "host" }).toString();
+            if (!host.isEmpty())
+                query.addQueryItem("host", host);
+            const auto mode = QJsonIO::GetValue(objStream, { key, "mode" }).toString();
+            if (!mode.isEmpty())
+                query.addQueryItem("mode", mode);
+            const auto extra = QJsonIO::GetValue(objStream, { key, "extra" }).toObject();
+            if (!extra.isEmpty())
+                query.addQueryItem("extra", QUrl::toPercentEncoding(QString::fromUtf8(QJsonDocument(extra).toJson(QJsonDocument::Compact))));
         }
         else if (network == "quic")
         {
@@ -155,30 +190,56 @@ const QString BuiltinSerializer::SerializeOutbound(const QString &protocol, cons
             const auto multiMode = QJsonIO::GetValue(objStream, { "grpcSettings", "multiMode" }).toBool(false);
             if (multiMode)
                 query.addQueryItem("mode", "multi");
+            const auto authority = QJsonIO::GetValue(objStream, { "grpcSettings", "authority" }).toString();
+            if (!authority.isEmpty())
+                query.addQueryItem("authority", authority);
         }
-        // -------- TLS RELATED --------
-        const auto tlsKey = security == "xtls" ? "xtlsSettings" : "tlsSettings";
-
-        const auto sni = QJsonIO::GetValue(objStream, { tlsKey, "serverName" }).toString();
-        if (!sni.isEmpty())
-            query.addQueryItem("sni", sni);
-
-        // ALPN
-        const auto alpnArray = QJsonIO::GetValue(objStream, { tlsKey, "alpn" }).toArray();
-        QStringList alpnList;
-        for (const auto v : alpnArray)
+        // -------- TLS / REALITY RELATED --------
+        if (security == "reality")
         {
-            const auto alpn = v.toString();
-            if (!alpn.isEmpty())
-                alpnList << alpn;
+            const auto &key = "realitySettings";
+            const auto sni = QJsonIO::GetValue(objStream, { key, "serverName" }).toString();
+            if (!sni.isEmpty())
+                query.addQueryItem("sni", sni);
+            const auto fp = QJsonIO::GetValue(objStream, { key, "fingerprint" }).toString();
+            if (!fp.isEmpty())
+                query.addQueryItem("fp", fp);
+            auto publicKey = QJsonIO::GetValue(objStream, { key, "publicKey" }).toString();
+            if (publicKey.isEmpty())
+                publicKey = QJsonIO::GetValue(objStream, { key, "password" }).toString();
+            if (!publicKey.isEmpty())
+                query.addQueryItem("pbk", publicKey);
+            const auto shortId = QJsonIO::GetValue(objStream, { key, "shortId" }).toString();
+            if (!shortId.isEmpty())
+                query.addQueryItem("sid", shortId);
+            const auto spiderX = QJsonIO::GetValue(objStream, { key, "spiderX" }).toString();
+            if (!spiderX.isEmpty() && spiderX != "/")
+                query.addQueryItem("spx", spiderX);
+            const auto mldsa65Verify = QJsonIO::GetValue(objStream, { key, "mldsa65Verify" }).toString();
+            if (!mldsa65Verify.isEmpty())
+                query.addQueryItem("mldsa65Verify", mldsa65Verify);
         }
-        query.addQueryItem("alpn", QUrl::toPercentEncoding(alpnList.join(",")));
-
-        // -------- XTLS Flow --------
-        if (security == "xtls")
+        else if (security == "tls")
         {
-            const auto flow = QJsonIO::GetValue(obj, "vnext", 0, "users", 0, "flow").toString();
-            query.addQueryItem("flow", flow);
+            const auto sni = QJsonIO::GetValue(objStream, { "tlsSettings", "serverName" }).toString();
+            if (!sni.isEmpty())
+                query.addQueryItem("sni", sni);
+            const auto fp = QJsonIO::GetValue(objStream, { "tlsSettings", "fingerprint" }).toString();
+            if (!fp.isEmpty())
+                query.addQueryItem("fp", fp);
+            const auto pinned = QJsonIO::GetValue(objStream, { "tlsSettings", "pinnedPeerCertSha256" }).toString();
+            if (!pinned.isEmpty())
+                query.addQueryItem("pinnedPeerCertSha256", pinned);
+            const auto alpnArray = QJsonIO::GetValue(objStream, { "tlsSettings", "alpn" }).toArray();
+            QStringList alpnList;
+            for (const auto v : alpnArray)
+            {
+                const auto alpn = v.toString();
+                if (!alpn.isEmpty())
+                    alpnList << alpn;
+            }
+            if (!alpnList.isEmpty())
+                query.addQueryItem("alpn", QUrl::toPercentEncoding(alpnList.join(",")));
         }
 
         // ======== END OF QUERY ========

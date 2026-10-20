@@ -63,6 +63,8 @@ namespace Qv2ray::base::objects::complex
         ConnectionId connectionId;
         QList<QString> outboundTags;
         QString strategyType;
+        QJsonObject strategySettings;
+        QString fallbackTag;
         int chainPortAllocation = QV2RAY_CHAINED_OUTBOUND_PORT_ALLOCATION;
         //
         safetype::OUTBOUND realOutbound;
@@ -81,7 +83,8 @@ namespace Qv2ray::base::objects::complex
             return meta;
         }
         OutboundObjectMeta() : metaType(METAOUTBOUND_ORIGINAL){};
-        JSONSTRUCT_REGISTER(OutboundObjectMeta, F(metaType, displayName, connectionId, outboundTags, chainPortAllocation, strategyType))
+        JSONSTRUCT_REGISTER(OutboundObjectMeta, F(metaType, displayName, connectionId, outboundTags, chainPortAllocation, strategyType,
+                                                  strategySettings, fallbackTag))
     };
 
     inline OutboundObjectMeta make_chained_outbound(const QList<QString> &chain, const QString &tag)
@@ -93,12 +96,15 @@ namespace Qv2ray::base::objects::complex
         return meta;
     }
 
-    inline OutboundObjectMeta make_balancer_outbound(const QList<QString> &outbounds, const QString &type, const QString &tag)
+    inline OutboundObjectMeta make_balancer_outbound(const QList<QString> &outbounds, const QString &type, const QString &tag,
+                                                      const QJsonObject &settings = {}, const QString &fallbackTag = "")
     {
         OutboundObjectMeta meta;
         meta.metaType = METAOUTBOUND_BALANCER;
         meta.outboundTags = outbounds;
         meta.strategyType = type;
+        meta.strategySettings = settings;
+        meta.fallbackTag = fallbackTag;
         meta.displayName = tag;
         return meta;
     }

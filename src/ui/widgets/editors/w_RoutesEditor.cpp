@@ -263,11 +263,19 @@ CONFIGROOT RouteEditor::OpenEditor()
         o.tag = out.getDisplayName();
         o.selector = out.outboundTags;
         o.strategy.type = out.strategyType;
+        o.strategy.settings = out.strategySettings;
+        o.fallbackTag = out.fallbackTag;
         balancersArray << o.toJson();
     }
 
     QJsonObject routingObject;
+    const auto oldRouting = root["routing"].toObject();
     routingObject["domainStrategy"] = domainStrategy;
+    // Preserve fields that are not exposed by the graph editor.
+    if (oldRouting.contains("domainMatcher"))
+        routingObject["domainMatcher"] = oldRouting["domainMatcher"];
+    if (oldRouting.contains("script"))
+        routingObject["script"] = oldRouting["script"];
     routingObject["rules"] = rulesJsonArray;
     routingObject["balancers"] = balancersArray;
     root["routing"] = routingObject;
@@ -338,7 +346,11 @@ void RouteEditor::on_addDefaultBtn_clicked()
     //
     const auto &inboundConfig = GlobalConfig.inboundConfig;
     const static QJsonObject sniffingOff{ { "enabled", false } };
-    const static QJsonObject sniffingOn{ { "enabled", true }, { "destOverride", QJsonArray{ "http", "tls" } } };
+    const auto makeSniffing = [](const Qv2rayConfig_ProtocolInboundBase &settings) {
+        return settings.sniffing ? GenerateSniffingObject(settings.sniffing, settings.destOverride, settings.metadataOnly, settings.routeOnly,
+                                                          settings.domainsExcluded, settings.ipsExcluded) :
+                                   sniffingOff;
+    };
     //
     if (inboundConfig.useHTTP)
     {
@@ -347,7 +359,7 @@ void RouteEditor::on_addDefaultBtn_clicked()
                                                      inboundConfig.listenip,          //
                                                      inboundConfig.httpSettings.port, //
                                                      httpSettings,                    //
-                                                     inboundConfig.httpSettings.sniffing ? sniffingOn : sniffingOff);
+                                                     makeSniffing(inboundConfig.httpSettings));
         const auto _ = nodeDispatcher->CreateInbound(httpConfig);
         Q_UNUSED(_)
     }
@@ -361,7 +373,7 @@ void RouteEditor::on_addDefaultBtn_clicked()
                                                       inboundConfig.listenip,           //
                                                       inboundConfig.socksSettings.port, //
                                                       socks,                            //
-                                                      (inboundConfig.socksSettings.sniffing ? sniffingOn : sniffingOff));
+                                                      makeSniffing(inboundConfig.socksSettings));
         const auto _ = nodeDispatcher->CreateInbound(socksConfig);
     }
 
@@ -376,7 +388,7 @@ void RouteEditor::on_addDefaultBtn_clicked()
         const auto tproxy_network = networks.join(",");
         auto tproxyInSettings = GenerateDokodemoIN("", 0, tproxy_network, 0, true);
         //
-        const static QJsonObject tproxy_sniff{ { "enabled", true }, { "destOverride", QJsonArray{ "http", "tls" } } };
+        const auto tproxy_sniff = makeSniffing(ts);
         const QJsonObject tproxy_streamSettings{ { "sockopt", QJsonObject{ { "tproxy", ts.mode } } } };
         {
             auto tProxyIn = GenerateInboundEntry("tProxy IPv4", "dokodemo-door", ts.tProxyIP, ts.port, tproxyInSettings);

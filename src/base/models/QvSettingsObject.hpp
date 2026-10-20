@@ -3,6 +3,7 @@
 #include "base/models/QvCoreSettings.hpp"
 #include "base/models/QvSafeType.hpp"
 
+#include <QFile>
 #include <chrono>
 
 constexpr int QV2RAY_CONFIG_VERSION = 14;
@@ -79,48 +80,143 @@ namespace Qv2ray::base::config
 
     struct Qv2rayConfig_Kernel
     {
+        Qv2rayCoreType coreType = CORE_AUTO;
         bool enableAPI = true;
         int statsPort = 15490;
         //
+        // v2ray-core path (VMess, VMessAEAD, Shadowsocks, ...).
         QString v2CorePath_linux;
         QString v2AssetsPath_linux;
         QString v2CorePath_macx;
         QString v2AssetsPath_macx;
         QString v2CorePath_win;
         QString v2AssetsPath_win;
+        // Xray-core path (VLESS, REALITY, XHTTP, ...).
+        QString xrayCorePath_linux;
+        QString xrayAssetsPath_linux;
+        QString xrayCorePath_macx;
+        QString xrayAssetsPath_macx;
+        QString xrayCorePath_win;
+        QString xrayAssetsPath_win;
 
 #ifdef Q_OS_LINUX
 #define _VARNAME_VCOREPATH_ v2CorePath_linux
 #define _VARNAME_VASSETSPATH_ v2AssetsPath_linux
+#define _VARNAME_XRAYCOREPATH_ xrayCorePath_linux
+#define _VARNAME_XRAYASSETSPATH_ xrayAssetsPath_linux
 #elif defined(Q_OS_MACOS)
 #define _VARNAME_VCOREPATH_ v2CorePath_macx
 #define _VARNAME_VASSETSPATH_ v2AssetsPath_macx
+#define _VARNAME_XRAYCOREPATH_ xrayCorePath_macx
+#define _VARNAME_XRAYASSETSPATH_ xrayAssetsPath_macx
 #elif defined(Q_OS_WIN)
 #define _VARNAME_VCOREPATH_ v2CorePath_win
 #define _VARNAME_VASSETSPATH_ v2AssetsPath_win
+#define _VARNAME_XRAYCOREPATH_ xrayCorePath_win
+#define _VARNAME_XRAYASSETSPATH_ xrayAssetsPath_win
 #endif
 
-        inline const QString KernelPath(const QString &path = "")
+        // The original (v2ray-core) getters/setters.
+        inline QString KernelPath() const
         {
-            return path.isEmpty() ? _VARNAME_VCOREPATH_ : _VARNAME_VCOREPATH_ = path;
+            return _VARNAME_VCOREPATH_;
         }
-        inline const QString AssetsPath(const QString &path = "")
+        inline const QString KernelPath(const QString &path)
         {
-            return path.isEmpty() ? _VARNAME_VASSETSPATH_ : _VARNAME_VASSETSPATH_ = path;
+            return _VARNAME_VCOREPATH_ = path;
+        }
+        inline QString AssetsPath() const
+        {
+            return _VARNAME_VASSETSPATH_;
+        }
+        inline const QString AssetsPath(const QString &path)
+        {
+            return _VARNAME_VASSETSPATH_ = path;
+        }
+        // Xray-core getters/setters.
+        inline QString XrayKernelPath() const
+        {
+            return _VARNAME_XRAYCOREPATH_;
+        }
+        inline const QString XrayKernelPath(const QString &path)
+        {
+            return _VARNAME_XRAYCOREPATH_ = path;
+        }
+        inline QString XrayAssetsPath() const
+        {
+            return _VARNAME_XRAYASSETSPATH_;
+        }
+        inline const QString XrayAssetsPath(const QString &path)
+        {
+            return _VARNAME_XRAYASSETSPATH_ = path;
+        }
+        inline QString KernelPath(Qv2rayCoreType type) const
+        {
+            return KernelPathFor(type);
+        }
+        inline QString AssetsPath(Qv2rayCoreType type) const
+        {
+            return AssetsPathFor(type);
+        }
+        inline QString KernelPathFor(Qv2rayCoreType type) const
+        {
+            if (type == CORE_AUTO)
+                type = EffectiveCoreType();
+            auto path = type == CORE_XRAY ? _VARNAME_XRAYCOREPATH_ : _VARNAME_VCOREPATH_;
+            // A user may have configured only one core executable.  This is
+            // useful when the same binary (or a renamed binary) is used for
+            // both roles, and keeps old Qv2ray configurations working.
+            if (path.isEmpty())
+                path = type == CORE_XRAY ? _VARNAME_VCOREPATH_ : _VARNAME_XRAYCOREPATH_;
+            // Convenience: "v2ray" and "xray" binaries are usually installed
+            // next to each other.  If the Xray path was not configured, use
+            // the matching sibling when it exists.
+            if (type == CORE_XRAY && _VARNAME_XRAYCOREPATH_.isEmpty())
+            {
+                auto candidate = path;
+                candidate.replace("v2ray", "xray", Qt::CaseInsensitive);
+                if (candidate != path && QFile::exists(candidate))
+                    path = candidate;
+            }
+            return path;
+        }
+        inline QString AssetsPathFor(Qv2rayCoreType type) const
+        {
+            if (type == CORE_AUTO)
+                type = EffectiveCoreType();
+            auto path = type == CORE_XRAY ? _VARNAME_XRAYASSETSPATH_ : _VARNAME_VASSETSPATH_;
+            if (path.isEmpty())
+                path = type == CORE_XRAY ? _VARNAME_VASSETSPATH_ : _VARNAME_XRAYASSETSPATH_;
+            return path;
         }
 
 #undef _VARNAME_VCOREPATH_
 #undef _VARNAME_VASSETSPATH_
+#undef _VARNAME_XRAYCOREPATH_
+#undef _VARNAME_XRAYASSETSPATH_
 
-        JSONSTRUCT_COMPARE(Qv2rayConfig_Kernel, enableAPI, statsPort, //
-                           v2CorePath_linux, v2AssetsPath_linux,      //
-                           v2CorePath_macx, v2AssetsPath_macx,        //
-                           v2CorePath_win, v2AssetsPath_win)
-        JSONSTRUCT_REGISTER(Qv2rayConfig_Kernel,                     //
-                            F(enableAPI, statsPort),                 //
-                            F(v2CorePath_linux, v2AssetsPath_linux), //
-                            F(v2CorePath_macx, v2AssetsPath_macx),   //
-                            F(v2CorePath_win, v2AssetsPath_win))
+        inline Qv2rayCoreType EffectiveCoreType() const
+        {
+            if (coreType != CORE_AUTO)
+                return coreType;
+            const auto executable = KernelPath().toLower();
+            if (executable.contains("xray"))
+                return CORE_XRAY;
+            const auto xrayExecutable = XrayKernelPath().toLower();
+            if (executable.isEmpty() && (xrayExecutable.contains("xray") || !xrayExecutable.isEmpty()))
+                return CORE_XRAY;
+            return CORE_V2RAY;
+        }
+
+        JSONSTRUCT_COMPARE(Qv2rayConfig_Kernel, coreType, enableAPI, statsPort,                         //
+                           v2CorePath_linux, v2AssetsPath_linux, xrayCorePath_linux, xrayAssetsPath_linux, //
+                           v2CorePath_macx, v2AssetsPath_macx, xrayCorePath_macx, xrayAssetsPath_macx,    //
+                           v2CorePath_win, v2AssetsPath_win, xrayCorePath_win, xrayAssetsPath_win)
+        JSONSTRUCT_REGISTER(Qv2rayConfig_Kernel,                                                                       //
+                            F(coreType, enableAPI, statsPort),                                                         //
+                            F(v2CorePath_linux, v2AssetsPath_linux, xrayCorePath_linux, xrayAssetsPath_linux),         //
+                            F(v2CorePath_macx, v2AssetsPath_macx, xrayCorePath_macx, xrayAssetsPath_macx),             //
+                            F(v2CorePath_win, v2AssetsPath_win, xrayCorePath_win, xrayAssetsPath_win))
     };
 
     struct Qv2rayConfig_Update

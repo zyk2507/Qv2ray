@@ -3,6 +3,7 @@
 #include "core/connection/Serialization.hpp"
 #include "utils/QvHelpers.hpp"
 
+#include <QJsonDocument>
 #include <QUrl>
 #include <QUrlQuery>
 
@@ -10,7 +11,7 @@ namespace Qv2ray::core::connection
 {
     namespace serialization::vmess_new
     {
-        const static QStringList NetworkType{ "tcp", "http", "ws", "kcp", "quic", "grpc" };
+        const static QStringList NetworkType{ "tcp", "raw", "http", "ws", "kcp", "quic", "grpc", "xhttp", "splithttp", "httpupgrade" };
         const static QStringList QuicSecurityTypes{ "none", "aes-128-gcm", "chacha20-poly1305" };
         const static QStringList QuicKcpHeaderTypes{ "none", "srtp", "utp", "wechat-video", "dtls", "wireguard" };
         const static QStringList FalseTypes{ "false", "False", "No", "Off", "0" };
@@ -46,13 +47,13 @@ namespace Qv2ray::core::connection
                     else
                         net = _protocol;
                 }
+                if (net == "raw")
+                    net = "tcp";
                 if (!NetworkType.contains(net))
                 {
                     *errMessage = QObject::tr("Invalid streamSettings protocol: ") + net;
                     return default;
                 }
-                // L("net: " << net.toStdString());
-                // L("tls: " << tls);
                 stream.network = net;
                 stream.security = tls ? "tls" : "";
             }
@@ -96,7 +97,10 @@ namespace Qv2ray::core::connection
                 }
                 else if (net == "ws")
                 {
-                    stream.wsSettings.headers["Host"] = getQueryValue("host", "");
+                    const auto host = getQueryValue("host", "");
+                    stream.wsSettings.host = host;
+                    if (!host.isEmpty())
+                        stream.wsSettings.headers["Host"] = host;
                     stream.wsSettings.path = getQueryValue("path", "/");
                 }
                 else if (net == "kcp")
@@ -113,6 +117,23 @@ namespace Qv2ray::core::connection
                 else if (net == "grpc")
                 {
                     stream.grpcSettings.serviceName = getQueryValue("serviceName", "");
+                    stream.grpcSettings.authority = getQueryValue("authority", "");
+                    stream.grpcSettings.multiMode = getQueryValue("mode", "") == "multi";
+                }
+                else if (net == "xhttp" || net == "splithttp")
+                {
+                    auto &xhttp = net == "xhttp" ? stream.xhttpSettings : stream.splithttpSettings;
+                    xhttp.host = getQueryValue("host", "");
+                    xhttp.path = getQueryValue("path", "/");
+                    xhttp.mode = getQueryValue("mode", "auto");
+                    const auto extra = getQueryValue("extra", "");
+                    if (!extra.isEmpty())
+                        xhttp.extra = JsonFromString(extra);
+                }
+                else if (net == "httpupgrade")
+                {
+                    stream.httpupgradeSettings.host = getQueryValue("host", "");
+                    stream.httpupgradeSettings.path = getQueryValue("path", "/");
                 }
                 else
                 {
@@ -121,10 +142,35 @@ namespace Qv2ray::core::connection
                 }
             }
 #undef default
-            if (tls)
+            const auto security = getQueryValue("security", tls ? "tls" : "none").toLower();
+            if (security == "reality")
             {
+                stream.security = "reality";
+                stream.realitySettings.serverName = getQueryValue("sni", getQueryValue("tlsServerName", ""));
+                stream.realitySettings.fingerprint = getQueryValue("fp", "");
+                stream.realitySettings.publicKey = getQueryValue("pbk", getQueryValue("publicKey", ""));
+                stream.realitySettings.password = stream.realitySettings.publicKey;
+                stream.realitySettings.shortId = getQueryValue("sid", getQueryValue("shortId", ""));
+                stream.realitySettings.spiderX = getQueryValue("spx", getQueryValue("spiderX", "/"));
+                stream.realitySettings.mldsa65Verify = getQueryValue("mldsa65Verify", "");
+            }
+            else if (security == "xtls")
+            {
+                // Legacy VMess XTLS links are migrated to TLS.
+                stream.security = "tls";
+                stream.tlsSettings.serverName = getQueryValue("sni", getQueryValue("tlsServerName", ""));
                 stream.tlsSettings.allowInsecure = !FalseTypes.contains(getQueryValue("allowInsecure", "false"));
-                stream.tlsSettings.serverName = getQueryValue("tlsServerName", "");
+            }
+            else if (tls)
+            {
+                stream.security = "tls";
+                stream.tlsSettings.allowInsecure = !FalseTypes.contains(getQueryValue("allowInsecure", "false"));
+                stream.tlsSettings.serverName = getQueryValue("sni", getQueryValue("tlsServerName", ""));
+                stream.tlsSettings.fingerprint = getQueryValue("fp", "");
+                const auto alpn = getQueryValue("alpn", "");
+                if (!alpn.isEmpty())
+                    stream.tlsSettings.alpn = alpn.split(",");
+                stream.tlsSettings.pinnedPeerCertSha256 = getQueryValue("pinnedPeerCertSha256", "");
             }
             CONFIGROOT root;
             OUTBOUNDSETTING vConf;
@@ -158,10 +204,31 @@ namespace Qv2ray::core::connection
             }
             else if (stream.network == "ws")
             {
-                if (stream.wsSettings.headers.contains("Host") && !stream.wsSettings.headers["Host"].isEmpty())
-                    query.addQueryItem("host", stream.wsSettings.headers["Host"]);
+                const auto host = !stream.wsSettings.host.isEmpty() ? stream.wsSettings.host :
+                                                                     stream.wsSettings.headers.value("Host", stream.wsSettings.headers.value("host"));
+                if (!host.isEmpty())
+                    query.addQueryItem("host", host);
                 if (!stream.wsSettings.path.isEmpty() && stream.wsSettings.path != "/")
                     query.addQueryItem("path", stream.wsSettings.path);
+            }
+            else if (stream.network == "httpupgrade")
+            {
+                if (!stream.httpupgradeSettings.host.isEmpty())
+                    query.addQueryItem("host", stream.httpupgradeSettings.host);
+                if (!stream.httpupgradeSettings.path.isEmpty() && stream.httpupgradeSettings.path != "/")
+                    query.addQueryItem("path", stream.httpupgradeSettings.path);
+            }
+            else if (stream.network == "xhttp" || stream.network == "splithttp")
+            {
+                const auto &xhttp = stream.network == "xhttp" ? stream.xhttpSettings : stream.splithttpSettings;
+                if (!xhttp.host.isEmpty())
+                    query.addQueryItem("host", xhttp.host);
+                if (!xhttp.path.isEmpty() && xhttp.path != "/")
+                    query.addQueryItem("path", xhttp.path);
+                if (!xhttp.mode.isEmpty())
+                    query.addQueryItem("mode", xhttp.mode);
+                if (!xhttp.extra.isEmpty())
+                    query.addQueryItem("extra", QString::fromUtf8(QJsonDocument(xhttp.extra).toJson(QJsonDocument::Compact)));
             }
             else if (stream.network == "kcp")
             {
@@ -183,24 +250,52 @@ namespace Qv2ray::core::connection
             {
                 if (!stream.grpcSettings.serviceName.isEmpty())
                     query.addQueryItem("serviceName", stream.grpcSettings.serviceName);
+                if (!stream.grpcSettings.authority.isEmpty())
+                    query.addQueryItem("authority", stream.grpcSettings.authority);
+                if (stream.grpcSettings.multiMode)
+                    query.addQueryItem("mode", "multi");
             }
             else
             {
                 return {};
             }
-            bool hasTLS = stream.security == "tls" || stream.security == "xtls";
-            auto protocol = stream.network;
+            const bool hasTLS = stream.security == "tls" || stream.security == "xtls" || stream.security == "reality";
+            auto protocol = stream.network == "raw" ? "tcp" : stream.network;
             if (hasTLS)
                 protocol += "+tls";
             if (stream.security == "tls")
             {
                 if (!stream.tlsSettings.serverName.isEmpty())
-                    query.addQueryItem("tlsServerName", stream.tlsSettings.serverName);
+                    query.addQueryItem("sni", stream.tlsSettings.serverName);
+                if (!stream.tlsSettings.fingerprint.isEmpty())
+                    query.addQueryItem("fp", stream.tlsSettings.fingerprint);
+                if (!stream.tlsSettings.alpn.isEmpty())
+                    query.addQueryItem("alpn", stream.tlsSettings.alpn.join(","));
+                if (!stream.tlsSettings.pinnedPeerCertSha256.isEmpty())
+                    query.addQueryItem("pinnedPeerCertSha256", stream.tlsSettings.pinnedPeerCertSha256);
+            }
+            else if (stream.security == "reality")
+            {
+                query.addQueryItem("security", "reality");
+                if (!stream.realitySettings.serverName.isEmpty())
+                    query.addQueryItem("sni", stream.realitySettings.serverName);
+                if (!stream.realitySettings.fingerprint.isEmpty())
+                    query.addQueryItem("fp", stream.realitySettings.fingerprint);
+                const auto publicKey = !stream.realitySettings.publicKey.isEmpty() ? stream.realitySettings.publicKey :
+                                                                                     stream.realitySettings.password;
+                if (!publicKey.isEmpty())
+                    query.addQueryItem("pbk", publicKey);
+                if (!stream.realitySettings.shortId.isEmpty())
+                    query.addQueryItem("sid", stream.realitySettings.shortId);
+                if (!stream.realitySettings.spiderX.isEmpty() && stream.realitySettings.spiderX != "/")
+                    query.addQueryItem("spx", stream.realitySettings.spiderX);
+                if (!stream.realitySettings.mldsa65Verify.isEmpty())
+                    query.addQueryItem("mldsa65Verify", stream.realitySettings.mldsa65Verify);
             }
             else if (stream.security == "xtls")
             {
                 if (!stream.xtlsSettings.serverName.isEmpty())
-                    query.addQueryItem("tlsServerName", stream.xtlsSettings.serverName);
+                    query.addQueryItem("sni", stream.xtlsSettings.serverName);
             }
             url.setPath("/");
             url.setScheme("vmess");

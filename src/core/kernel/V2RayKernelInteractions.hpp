@@ -14,14 +14,14 @@ namespace Qv2ray::core::kernel
         explicit V2RayKernelInstance(QObject *parent = nullptr);
         ~V2RayKernelInstance() override;
         //
-        std::optional<QString> StartConnection(const CONFIGROOT &root);
+        std::optional<QString> StartConnection(const CONFIGROOT &root, Qv2rayCoreType coreType = CORE_AUTO);
         void StopConnection();
         bool IsKernelRunning() const
         {
             return kernelStarted;
         }
         //
-        static std::optional<QString> ValidateConfig(const QString &path);
+        static std::optional<QString> ValidateConfig(const QString &path, Qv2rayCoreType coreType = CORE_AUTO);
         static std::pair<bool, std::optional<QString>> ValidateKernel(const QString &vCorePath, const QString &vAssetsPath);
 #if QV2RAY_FEATURE(kernel_check_permission)
         static std::pair<bool, std::optional<QString>> CheckAndSetCoreExecutableState(const QString &vCorePath);
@@ -37,6 +37,7 @@ namespace Qv2ray::core::kernel
         QProcess *vProcess;
         bool apiEnabled;
         bool kernelStarted = false;
+        Qv2rayCoreType currentCoreType = CORE_AUTO;
     };
 } // namespace Qv2ray::core::kernel
 

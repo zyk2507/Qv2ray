@@ -4,6 +4,19 @@
 
 namespace Qv2ray::base::config
 {
+    /**
+     * Which JSON dialect Qv2ray should generate.
+     *
+     * AUTO uses the executable name and the version string reported by the
+     * core, and falls back to v2ray-core compatibility.
+     */
+    enum Qv2rayCoreType
+    {
+        CORE_AUTO = 0,
+        CORE_V2RAY = 1,
+        CORE_XRAY = 2,
+    };
+
     struct QvConfig_Route
     {
         struct QvRouteConfig_Impl
@@ -79,10 +92,16 @@ namespace Qv2ray::base::config
         bool useAuth = false;
         bool sniffing = false;
         QList<QString> destOverride = { "http", "tls" };
+        QList<QString> domainsExcluded;
+        QList<QString> ipsExcluded;
         objects::AccountObject account;
         bool metadataOnly = true;
+        // Xray-core sniffing option: use the sniffed destination only for
+        // routing, but keep the original address for the connection.
+        bool routeOnly = false;
         Qv2rayConfig_ProtocolInboundBase(){};
-        JSONSTRUCT_REGISTER(Qv2rayConfig_ProtocolInboundBase, F(port, useAuth, sniffing, destOverride, account, metadataOnly))
+        JSONSTRUCT_REGISTER(Qv2rayConfig_ProtocolInboundBase, F(port, useAuth, sniffing, destOverride, domainsExcluded, ipsExcluded, account,
+                                                                metadataOnly, routeOnly))
     };
 
     struct QvConfig_SocksInbound : Qv2rayConfig_ProtocolInboundBase
@@ -93,7 +112,8 @@ namespace Qv2ray::base::config
         {
             port = 1089;
         }
-        JSONSTRUCT_COMPARE(QvConfig_SocksInbound, enableUDP, localIP, port, useAuth, sniffing, destOverride, metadataOnly)
+        JSONSTRUCT_COMPARE(QvConfig_SocksInbound, enableUDP, localIP, port, useAuth, sniffing, destOverride, domainsExcluded, ipsExcluded,
+                           metadataOnly, routeOnly)
         JSONSTRUCT_REGISTER(QvConfig_SocksInbound, B(Qv2rayConfig_ProtocolInboundBase), F(enableUDP, localIP))
     };
 
@@ -103,7 +123,7 @@ namespace Qv2ray::base::config
         {
             port = 8889;
         }
-        JSONSTRUCT_COMPARE(QvConfig_HttpInbound, port, useAuth, sniffing, destOverride, metadataOnly)
+        JSONSTRUCT_COMPARE(QvConfig_HttpInbound, port, useAuth, sniffing, destOverride, domainsExcluded, ipsExcluded, metadataOnly, routeOnly)
         JSONSTRUCT_REGISTER(QvConfig_HttpInbound, B(Qv2rayConfig_ProtocolInboundBase))
     };
 
@@ -119,7 +139,8 @@ namespace Qv2ray::base::config
             port = 12345;
             sniffing = true;
         }
-        JSONSTRUCT_COMPARE(QvConfig_TProxy, tProxyIP, tProxyV6IP, hasTCP, hasUDP, mode, port, useAuth, sniffing, destOverride, metadataOnly)
+        JSONSTRUCT_COMPARE(QvConfig_TProxy, tProxyIP, tProxyV6IP, hasTCP, hasUDP, mode, port, useAuth, sniffing, destOverride,
+                           domainsExcluded, ipsExcluded, metadataOnly, routeOnly)
         JSONSTRUCT_REGISTER(QvConfig_TProxy, B(Qv2rayConfig_ProtocolInboundBase), F(tProxyIP, tProxyV6IP, hasTCP, hasUDP, mode))
     };
 

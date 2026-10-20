@@ -1,10 +1,16 @@
 #include "QvGeositeReader.hpp"
 
+#define QV_MODULE_NAME "GeositeReader"
+
 #ifndef ANDROID
 #include "v2ray_geosite.pb.h"
+// Recent protobuf versions pull in Abseil's LOG macro, which clashes with
+// Qv2ray's own logging macro.  Restore the Qv2ray definition.
+#ifdef LOG
+#undef LOG
 #endif
-
-#define QV_MODULE_NAME "GeositeReader"
+#define LOG(...) Qv2ray::base::log_internal<QV2RAY_LOG_NORMAL>(_LOG_ARG_(__VA_ARGS__))
+#endif
 
 namespace Qv2ray::components::geosite
 {

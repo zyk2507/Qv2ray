@@ -26,6 +26,25 @@ namespace Qv2ray::core
         return in.QV2RAY_RULE_TAG;
     }
     //
+    // Detect which core dialect is used.  Generation code uses this for the
+    // few options whose JSON representation differs between v2ray-core and
+    // Xray-core.
+    void SetDetectedCoreType(Qv2ray::base::config::Qv2rayCoreType type);
+    // The core selected in the settings or detected from the version output.
+    Qv2ray::base::config::Qv2rayCoreType GetCoreType();
+    // Select the core needed by the protocols/features used by this config.
+    // VLESS is handled by Xray-core, VMess by v2ray-core.  Configs mixing
+    // both protocols fall back to Xray-core, which can still parse VMess.
+    Qv2ray::base::config::Qv2rayCoreType GetCoreTypeForConfig(const CONFIGROOT &root);
+    inline bool IsXrayCore()
+    {
+        return GetCoreType() == Qv2ray::base::config::CORE_XRAY;
+    }
+    inline bool IsXrayCore(const CONFIGROOT &root)
+    {
+        return GetCoreTypeForConfig(root) == Qv2ray::base::config::CORE_XRAY;
+    }
+    //
     int64_t GetConnectionLatency(const ConnectionId &id);
     uint64_t GetConnectionTotalData(const ConnectionId &id);
     const std::tuple<quint64, quint64> GetConnectionUsageAmount(const ConnectionId &id);

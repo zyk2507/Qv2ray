@@ -1,5 +1,6 @@
 #include "CoreUtils.hpp"
 
+#include "base/Qv2rayBase.hpp"
 #include "core/connection/Serialization.hpp"
 #include "core/handler/ConfigHandler.hpp"
 #include "utils/QvHelpers.hpp"
@@ -8,6 +9,88 @@
 
 namespace Qv2ray::core
 {
+    using namespace Qv2ray::base::config;
+
+    namespace
+    {
+        Qv2rayCoreType detectedCoreType = CORE_AUTO;
+    }
+
+    void SetDetectedCoreType(Qv2rayCoreType type)
+    {
+        if (type != CORE_AUTO)
+            detectedCoreType = type;
+    }
+
+    Qv2rayCoreType GetCoreType()
+    {
+        if (!QvCoreApplication)
+            return detectedCoreType == CORE_AUTO ? CORE_V2RAY : detectedCoreType;
+        if (GlobalConfig.kernelConfig.coreType != CORE_AUTO)
+            return GlobalConfig.kernelConfig.coreType;
+        if (detectedCoreType != CORE_AUTO)
+            return detectedCoreType;
+        return GlobalConfig.kernelConfig.EffectiveCoreType();
+    }
+
+    Qv2rayCoreType GetCoreTypeForConfig(const CONFIGROOT &root)
+    {
+        bool hasVLESS = false;
+        bool hasVMess = false;
+        bool needsXrayFeatures = false;
+        const auto explicitType = QvCoreApplication ? GlobalConfig.kernelConfig.coreType : CORE_AUTO;
+
+        const auto inspectEntry = [&](const QJsonObject &entry) {
+            const auto protocol = entry["protocol"].toString().toLower();
+            if (protocol == "vless")
+                hasVLESS = true;
+            else if (protocol == "vmess")
+                hasVMess = true;
+
+            const auto stream = entry["streamSettings"].toObject();
+            const auto network = stream["network"].toString(stream["method"].toString()).toLower();
+            const auto security = stream["security"].toString().toLower();
+            if (network == "xhttp" || network == "splithttp" || network == "httpupgrade" || network == "hysteria" ||
+                network == "masque" || network == "xdrive")
+                needsXrayFeatures = true;
+            if (security == "reality")
+                needsXrayFeatures = true;
+        };
+
+        for (const auto &key : { "inbounds", "outbounds" })
+        {
+            for (const auto &entry : root[key].toArray())
+                inspectEntry(entry.toObject());
+        }
+
+        // VLESS is a first-class Xray-core protocol.
+        if (hasVLESS)
+            return CORE_XRAY;
+
+        if (hasVMess)
+        {
+            // Xray-only transports/security cannot run on v2ray-core.  The
+            // requirement is to use v2ray-core for the VMess protocol, but a
+            // configuration using REALITY/XHTTP has no v2ray-core equivalent.
+            if (needsXrayFeatures || explicitType == CORE_XRAY)
+            {
+                LOG("VMess configuration uses Xray-only features, using Xray-core.");
+                return CORE_XRAY;
+            }
+            // The user may explicitly force a core for advanced setups.
+            if (explicitType == CORE_AUTO)
+                return CORE_V2RAY;
+        }
+
+        if (explicitType != CORE_AUTO)
+            return explicitType;
+
+        if (detectedCoreType != CORE_AUTO)
+            return detectedCoreType;
+
+        return QvCoreApplication ? GlobalConfig.kernelConfig.EffectiveCoreType() : CORE_V2RAY;
+    }
+
     bool IsComplexConfig(const ConnectionId &id)
     {
         return IsComplexConfig(ConnectionManager->GetConnectionRoot(id));

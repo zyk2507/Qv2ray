@@ -1,6 +1,7 @@
 #include "ConfigHandler.hpp"
 
 #include "components/plugins/QvPluginHost.hpp"
+#include "core/CoreUtils.hpp"
 #include "core/connection/Serialization.hpp"
 #include "core/handler/RouteHandler.hpp"
 #include "core/settings/SettingsBackend.hpp"
@@ -312,9 +313,13 @@ namespace Qv2ray::core::handler
         connections[identifier.connectionId].lastConnected = system_clock::to_time_t(system_clock::now());
         //
         CONFIGROOT root = GetConnectionRoot(identifier.connectionId);
-        const auto fullConfig = RouteManager->GenerateFinalConfig(root, groups[identifier.groupId].routeConfigId);
+        // Decide the core once: VLESS uses Xray-core, VMess uses v2ray-core.
+        // Keeping the decision stable avoids re-selecting after the
+        // compatibility filter has normalized the generated config.
+        Qv2rayCoreType coreType = CORE_AUTO;
+        const auto fullConfig = RouteManager->GenerateFinalConfig(root, groups[identifier.groupId].routeConfigId, true, CORE_AUTO, &coreType);
         //
-        auto errMsg = kernelHandler->StartConnection(identifier, fullConfig);
+        auto errMsg = kernelHandler->StartConnection(identifier, fullConfig, coreType);
         if (errMsg)
         {
             QvMessageBoxWarn(nullptr, tr("Failed to start connection"), *errMsg);

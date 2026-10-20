@@ -6,7 +6,15 @@ namespace Qv2ray::core::connection::generation::routing
         QJsonObject root = dnsServer.toJson();
         QJsonArray servers;
         for (const auto &serv : dnsServer.servers)
-            servers << (serv.QV2RAY_DNS_IS_COMPLEX_DNS ? serv.toJson() : QJsonValue(serv.address));
+        {
+            const auto serverJson = serv.toJson();
+            // A server with any extra option cannot be represented by the
+            // compact string form.  Imported configs do not carry Qv2ray's
+            // internal marker, so inspect the serialized object as well.
+            const bool isComplex = serv.QV2RAY_DNS_IS_COMPLEX_DNS || serverJson.size() > 1 || !serv.domains.isEmpty() ||
+                                   !serv.expectIPs.isEmpty() || !serv.unexpectedIPs.isEmpty();
+            servers << (isComplex ? QJsonValue(serverJson) : QJsonValue(serv.address));
+        }
         root["servers"] = servers;
         return root;
     }

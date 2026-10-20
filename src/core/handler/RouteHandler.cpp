@@ -196,16 +196,23 @@ namespace Qv2ray::core::handler
         return result;
     }
 
-    CONFIGROOT RouteHandler::GenerateFinalConfig(const ConnectionGroupPair &p, bool api) const
+    CONFIGROOT RouteHandler::GenerateFinalConfig(const ConnectionGroupPair &p, bool api, Qv2rayCoreType coreType,
+                                                 Qv2rayCoreType *selectedCore) const
     {
-        return GenerateFinalConfig(ConnectionManager->GetConnectionRoot(p.connectionId), ConnectionManager->GetGroupRoutingId(p.groupId), api);
+        return GenerateFinalConfig(ConnectionManager->GetConnectionRoot(p.connectionId), ConnectionManager->GetGroupRoutingId(p.groupId), api,
+                                   coreType, selectedCore);
     }
 
     //
     // BEGIN RUNTIME CONFIG GENERATION
     // We need copy construct here
-    CONFIGROOT RouteHandler::GenerateFinalConfig(CONFIGROOT root, const GroupRoutingId &routingId, bool hasAPI) const
+    CONFIGROOT RouteHandler::GenerateFinalConfig(CONFIGROOT root, const GroupRoutingId &routingId, bool hasAPI, Qv2rayCoreType coreType,
+                                                 Qv2rayCoreType *selectedCore) const
     {
+        // Imported/legacy configs may contain "security": "xtls", Xray's
+        // "method" alias, or the old "raw"/"gun" transport names.  Normalize
+        // them once before any further processing.
+        NormalizeLegacyStreamSettings(root);
         const auto &config = configs.contains(routingId) ? configs[routingId] : GlobalConfig.defaultRouteConfig;
         //
         const auto &connConf = config.overrideConnectionConfig ? config.connectionConfig : GlobalConfig.defaultRouteConfig.connectionConfig;
@@ -440,6 +447,17 @@ namespace Qv2ray::core::handler
             root["api"] = GenerateAPIEntry(API_TAG_DEFAULT);
         }
 
+        // A few options have different JSON representations (or have been
+        // removed) in one of the cores.  Apply the compatibility pass last so
+        // that both generated and imported fields are covered.  VLESS selects
+        // Xray-core, VMess selects v2ray-core (see GetCoreTypeForConfig).
+        // The decision is made after external/chained outbounds have been
+        // expanded so that their protocols are taken into account too.
+        if (coreType == CORE_AUTO)
+            coreType = GetCoreTypeForConfig(root);
+        if (selectedCore)
+            *selectedCore = coreType;
+        ApplyCoreCompatibilityFilter(root, coreType);
         return root;
     }
 } // namespace Qv2ray::core::handler

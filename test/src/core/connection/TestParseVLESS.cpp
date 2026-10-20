@@ -30,7 +30,7 @@ TEST_CASE("Test VLESS URL Parsing")
         INFO("Parsed: " << QJsonDocument(result).toJson().toStdString());
         REQUIRE(errMessage.isEmpty());
 
-        const auto alpnField = QJsonIO::GetValue(result, "outbounds", 0, "streamSettings", "xtlsSettings", "alpn");
+        const auto alpnField = QJsonIO::GetValue(result, "outbounds", 0, "streamSettings", "tlsSettings", "alpn");
         REQUIRE(alpnField.isArray());
 
         const auto alpnArray = alpnField.toArray();
@@ -76,5 +76,39 @@ TEST_CASE("Test VLESS URL Parsing")
 
         const auto modeString = mode.toBool();
         REQUIRE(mode == true);
+    }
+
+    SECTION("REALITY Parse Test")
+    {
+        const static auto url = "vless://b0dd64e4-0fbd-4038-9139-d1f32a68a0dc@qv2ray.net:443?security=reality&flow=xtls-rprx-vision"
+                                "&sni=www.example.com&fp=chrome&pbk=public-key&sid=0123456789abcdef&spx=%2F";
+        const auto result = vless::Deserialize(url, &alias, &errMessage);
+
+        INFO("Parsed: " << QJsonDocument(result).toJson().toStdString());
+        REQUIRE(errMessage.isEmpty());
+
+        const auto stream = QJsonIO::GetValue(result, "outbounds", 0, "streamSettings").toObject();
+        REQUIRE(stream["security"].toString().toStdString() == "reality");
+        REQUIRE(stream["realitySettings"].toObject()["publicKey"].toString().toStdString() == "public-key");
+        REQUIRE(stream["realitySettings"].toObject()["shortId"].toString().toStdString() == "0123456789abcdef");
+        REQUIRE(stream["realitySettings"].toObject()["fingerprint"].toString().toStdString() == "chrome");
+        REQUIRE(QJsonIO::GetValue(result, "outbounds", 0, "settings", "vnext", 0, "users", 0, "flow").toString().toStdString() ==
+                "xtls-rprx-vision");
+    }
+
+    SECTION("XHTTP and VLESS Encryption Parse Test")
+    {
+        const static auto url = "vless://b0dd64e4-0fbd-4038-9139-d1f32a68a0dc@qv2ray.net:443?type=xhttp&security=tls"
+                                "&path=%2Ffoo&host=example.com&mode=stream-one&encryption=none";
+        const auto result = vless::Deserialize(url, &alias, &errMessage);
+
+        INFO("Parsed: " << QJsonDocument(result).toJson().toStdString());
+        REQUIRE(errMessage.isEmpty());
+
+        const auto stream = QJsonIO::GetValue(result, "outbounds", 0, "streamSettings").toObject();
+        REQUIRE(stream["network"].toString().toStdString() == "xhttp");
+        REQUIRE(stream["xhttpSettings"].toObject()["path"].toString().toStdString() == "/foo");
+        REQUIRE(stream["xhttpSettings"].toObject()["host"].toString().toStdString() == "example.com");
+        REQUIRE(stream["xhttpSettings"].toObject()["mode"].toString().toStdString() == "stream-one");
     }
 }

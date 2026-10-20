@@ -28,6 +28,8 @@ class OutboundEditor
     void on_ipLineEdit_textEdited(const QString &arg1);
     void on_muxConcurrencyTxt_valueChanged(int arg1);
     void on_muxEnabledCB_stateChanged(int arg1);
+    void on_muxXudpConcurrencySB_valueChanged(int arg1);
+    void on_muxXudpProxy443CB_currentTextChanged(const QString &arg1);
     void on_outBoundTypeCombo_currentIndexChanged(int index);
     void on_portLineEdit_textEdited(const QString &arg1);
     void on_tagTxt_textEdited(const QString &arg1);
@@ -41,6 +43,8 @@ class OutboundEditor
     OUTBOUND originalConfig;
     OUTBOUND resultConfig;
     QJsonObject muxConfig;
+    QSpinBox *muxXudpConcurrencySB = nullptr;
+    QComboBox *muxXudpProxy443CB = nullptr;
     QString serverAddress;
     int serverPort;
     //

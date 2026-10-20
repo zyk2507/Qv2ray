@@ -6,8 +6,10 @@
 #include "ui/widgets/editors/w_JsonEditor.hpp"
 #include "ui/widgets/editors/w_RoutesEditor.hpp"
 
+#include <QComboBox>
 #include <QFile>
 #include <QIntValidator>
+#include <QSpinBox>
 
 #define QV_MODULE_NAME "OutboundEditor"
 
@@ -19,6 +21,17 @@ OutboundEditor::OutboundEditor(QWidget *parent) : QDialog(parent), tag(OUTBOUND_
     streamSettingsWidget = new StreamSettingsWidget(this);
     streamSettingsWidget->SetStreamObject({});
     transportFrame->addWidget(streamSettingsWidget);
+    //
+    // Xray-core Mux.Cool additions.
+    muxXudpConcurrencySB = new QSpinBox(this);
+    muxXudpConcurrencySB->setRange(-1, 1024);
+    muxXudpConcurrencySB->setValue(0);
+    muxXudpProxy443CB = new QComboBox(this);
+    muxXudpProxy443CB->addItems({ "reject", "allow", "skip" });
+    formLayout_8->addRow(tr("XUDP Concurrency"), muxXudpConcurrencySB);
+    formLayout_8->addRow(tr("XUDP Proxy UDP443"), muxXudpProxy443CB);
+    connect(muxXudpConcurrencySB, QOverload<int>::of(&QSpinBox::valueChanged), this, &OutboundEditor::on_muxXudpConcurrencySB_valueChanged);
+    connect(muxXudpProxy443CB, &QComboBox::currentTextChanged, this, &OutboundEditor::on_muxXudpProxy443CB_currentTextChanged);
     //
     for (const auto &name : PluginHost->UsablePlugins())
     {
@@ -121,6 +134,8 @@ void OutboundEditor::reloadGUI()
     useFPCB->setChecked(useForwardProxy);
     muxEnabledCB->setChecked(muxConfig["enabled"].toBool());
     muxConcurrencyTxt->setValue(muxConfig["concurrency"].toInt());
+    muxXudpConcurrencySB->setValue(muxConfig["xudpConcurrency"].toInt());
+    muxXudpProxy443CB->setCurrentText(muxConfig["xudpProxyUDP443"].toString("reject"));
     //
     const auto &settings = originalConfig["settings"].toObject();
     //
@@ -178,6 +193,16 @@ void OutboundEditor::on_muxEnabledCB_stateChanged(int arg1)
 void OutboundEditor::on_muxConcurrencyTxt_valueChanged(int arg1)
 {
     muxConfig["concurrency"] = arg1;
+}
+
+void OutboundEditor::on_muxXudpConcurrencySB_valueChanged(int arg1)
+{
+    muxConfig["xudpConcurrency"] = arg1;
+}
+
+void OutboundEditor::on_muxXudpProxy443CB_currentTextChanged(const QString &arg1)
+{
+    muxConfig["xudpProxyUDP443"] = arg1;
 }
 
 void OutboundEditor::on_useFPCB_stateChanged(int arg1)

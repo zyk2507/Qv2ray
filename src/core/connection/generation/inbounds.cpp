@@ -65,7 +65,8 @@ namespace Qv2ray::core::connection::generation::inbounds
         return root;
     }
 
-    QJsonObject GenerateSniffingObject(bool enabled, QList<QString> destOverride, bool metadataOnly)
+    QJsonObject GenerateSniffingObject(bool enabled, QList<QString> destOverride, bool metadataOnly, bool routeOnly,
+                                       const QList<QString> &domainsExcluded, const QList<QString> &ipsExcluded)
     {
         QJsonObject root;
         QStringList list;
@@ -75,6 +76,8 @@ namespace Qv2ray::core::connection::generation::inbounds
 
         root.insert("enabled", enabled);
         root["metadataOnly"] = metadataOnly;
+        if (routeOnly)
+            root["routeOnly"] = true;
 
         if (!destOverride.isEmpty())
         {
@@ -82,6 +85,10 @@ namespace Qv2ray::core::connection::generation::inbounds
                 list << destOverride.at(i);
             root.insert("destOverride", QJsonArray::fromStringList(list));
         }
+        if (!domainsExcluded.isEmpty())
+            root["domainsExcluded"] = QJsonArray::fromStringList(domainsExcluded);
+        if (!ipsExcluded.isEmpty())
+            root["ipsExcluded"] = QJsonArray::fromStringList(ipsExcluded);
         return root;
     }
 
@@ -94,8 +101,12 @@ namespace Qv2ray::core::connection::generation::inbounds
         if (GlobalConfig.inboundConfig.useHTTP)
         {
             const auto httpInSettings = GenerateHTTPIN(INCONF.httpSettings.useAuth, { INCONF.httpSettings.account });
-            const auto httpSniffingObject = GenerateSniffingObject(INCONF.httpSettings.sniffing, //
-                                                                   INCONF.httpSettings.destOverride);
+            const auto httpSniffingObject = GenerateSniffingObject(INCONF.httpSettings.sniffing,                 //
+                                                                   INCONF.httpSettings.destOverride,             //
+                                                                   INCONF.httpSettings.metadataOnly,             //
+                                                                   INCONF.httpSettings.routeOnly,                //
+                                                                   INCONF.httpSettings.domainsExcluded,          //
+                                                                   INCONF.httpSettings.ipsExcluded);
             const auto httpInboundObject = GenerateInboundEntry("http_IN", "http",        //
                                                                 INCONF.listenip,          //
                                                                 INCONF.httpSettings.port, //
@@ -111,8 +122,12 @@ namespace Qv2ray::core::connection::generation::inbounds
                                                          { INCONF.socksSettings.account },                     //
                                                          INCONF.socksSettings.enableUDP,                       //
                                                          INCONF.socksSettings.localIP);
-            const auto socksSniffingObject = GenerateSniffingObject(INCONF.socksSettings.sniffing, //
-                                                                    INCONF.socksSettings.destOverride);
+            const auto socksSniffingObject = GenerateSniffingObject(INCONF.socksSettings.sniffing,                 //
+                                                                    INCONF.socksSettings.destOverride,             //
+                                                                    INCONF.socksSettings.metadataOnly,             //
+                                                                    INCONF.socksSettings.routeOnly,                //
+                                                                    INCONF.socksSettings.domainsExcluded,          //
+                                                                    INCONF.socksSettings.ipsExcluded);
             const auto socksInboundObject = GenerateInboundEntry("socks_IN", "socks",       //
                                                                  INCONF.listenip,           //
                                                                  INCONF.socksSettings.port, //
@@ -131,8 +146,12 @@ namespace Qv2ray::core::connection::generation::inbounds
                 networks << "udp";
             const auto tproxy_network = networks.join(",");
             const auto tProxySettings = GenerateDokodemoIN("", 0, tproxy_network, 0, true);
-            const auto tproxySniffingObject = GenerateSniffingObject(INCONF.tProxySettings.sniffing, //
-                                                                     INCONF.tProxySettings.destOverride);
+            const auto tproxySniffingObject = GenerateSniffingObject(INCONF.tProxySettings.sniffing,                 //
+                                                                     INCONF.tProxySettings.destOverride,             //
+                                                                     INCONF.tProxySettings.metadataOnly,             //
+                                                                     INCONF.tProxySettings.routeOnly,                //
+                                                                     INCONF.tProxySettings.domainsExcluded,          //
+                                                                     INCONF.tProxySettings.ipsExcluded);
             // tProxy IPv4 Settings
             {
                 LOG("Processing tProxy IPv4 inbound");

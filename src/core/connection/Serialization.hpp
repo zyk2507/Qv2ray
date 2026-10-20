@@ -32,6 +32,7 @@ namespace Qv2ray::core::connection::serialization
     namespace vless
     {
         CONFIGROOT Deserialize(const QString &vless, QString *alias, QString *errMessage);
+        const QString Serialize(const StreamSettingsObject &stream, const VLESSServerObject &server, const QString &alias);
     } // namespace vless
 
     namespace ss

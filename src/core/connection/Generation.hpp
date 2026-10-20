@@ -29,7 +29,9 @@ namespace Qv2ray::core::connection::generation
         INBOUNDSETTING GenerateHTTPIN(bool auth, const QList<AccountObject> &accounts, int timeout = 300, bool allowTransparent = true);
         INBOUNDSETTING GenerateSocksIN(const QString &auth, const QList<AccountObject> &_accounts, bool udp = false, const QString &ip = "127.0.0.1");
         INBOUNDS GenerateDefaultInbounds();
-        QJsonObject GenerateSniffingObject(bool enabled, QList<QString> destOverride, bool metadataOnly = false);
+        QJsonObject GenerateSniffingObject(bool enabled, QList<QString> destOverride, bool metadataOnly = false,
+                                           bool routeOnly = false, const QList<QString> &domainsExcluded = {},
+                                           const QList<QString> &ipsExcluded = {});
         INBOUND GenerateInboundEntry(const QString &tag,               //
                                      const QString &protocol,          //
                                      const QString &listen,            //
@@ -63,6 +65,13 @@ namespace Qv2ray::core::connection::generation
         void BypassBTFilter(CONFIGROOT &root);
         void mKCPSeedFilter(CONFIGROOT &root);
         void FillupTagsFilter(CONFIGROOT &root, const QString &subKey);
+        // Convert removed/legacy JSON constructs to their modern equivalents.
+        void NormalizeLegacyStreamSettings(CONFIGROOT &root);
+        // Apply the dialect-specific compatibility rules for the selected
+        // core (Xray-core or v2ray-core).
+        void ApplyCoreCompatibilityFilter(CONFIGROOT &root, Qv2rayCoreType coreType);
+        // Backwards-compatible alias for the Xray-only pass.
+        void XrayCompatibilityFilter(CONFIGROOT &root);
     } // namespace filters
 
 } // namespace Qv2ray::core::connection::generation

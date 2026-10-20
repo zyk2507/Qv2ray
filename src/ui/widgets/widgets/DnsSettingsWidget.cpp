@@ -5,6 +5,12 @@
 #include "ui/widgets/widgets/QvAutoCompleteTextEdit.hpp"
 #include "utils/QvHelpers.hpp"
 
+#include <QCheckBox>
+#include <QComboBox>
+#include <QFormLayout>
+#include <QGroupBox>
+#include <QSpinBox>
+
 using Qv2ray::common::validation::IsIPv4Address;
 using Qv2ray::common::validation::IsIPv6Address;
 using Qv2ray::common::validation::IsValidDNSServer;
@@ -55,6 +61,49 @@ DnsSettingsWidget::DnsSettingsWidget(QWidget *parent) : QWidget(parent)
     expectedIPsLayout->addWidget(ipListTxt);
     detailsSettingsGB->setCheckable(true);
     detailsSettingsGB->setChecked(false);
+
+    // Top-level DNS options supported by current v2ray-core/Xray-core.
+    auto advancedDnsGroup = new QGroupBox(tr("Advanced DNS Options"), this);
+    auto advancedDnsLayout = new QFormLayout(advancedDnsGroup);
+    auto disableFallbackIfMatchCB = new QCheckBox(tr("Disable fallback if any domain matches"), advancedDnsGroup);
+    auto enableParallelQueryCB = new QCheckBox(tr("Enable parallel query"), advancedDnsGroup);
+    auto useSystemHostsCB = new QCheckBox(tr("Use system hosts file"), advancedDnsGroup);
+    auto serveStaleCB = new QCheckBox(tr("Serve stale records"), advancedDnsGroup);
+    auto serveExpiredTTLSB = new QSpinBox(advancedDnsGroup);
+    serveExpiredTTLSB->setRange(0, 1 << 30);
+    auto domainMatcherCB = new QComboBox(advancedDnsGroup);
+    domainMatcherCB->addItems({ "", "linear", "mph" });
+    auto cacheStrategyCB = new QComboBox(advancedDnsGroup);
+    cacheStrategyCB->addItems({ "", "enabled", "disabled" });
+    auto fallbackStrategyCB = new QComboBox(advancedDnsGroup);
+    fallbackStrategyCB->addItems({ "", "enabled", "disabled", "disabledIfAnyMatch" });
+    advancedDnsLayout->addRow(disableFallbackIfMatchCB);
+    advancedDnsLayout->addRow(enableParallelQueryCB);
+    advancedDnsLayout->addRow(useSystemHostsCB);
+    advancedDnsLayout->addRow(serveStaleCB);
+    advancedDnsLayout->addRow(tr("Serve expired TTL"), serveExpiredTTLSB);
+    advancedDnsLayout->addRow(tr("Domain matcher"), domainMatcherCB);
+    advancedDnsLayout->addRow(tr("Cache strategy"), cacheStrategyCB);
+    advancedDnsLayout->addRow(tr("Fallback strategy"), fallbackStrategyCB);
+    verticalLayout_2->addWidget(advancedDnsGroup);
+    connect(disableFallbackIfMatchCB, &QCheckBox::stateChanged, [this](int v) { dns.disableFallbackIfMatch = v == Qt::Checked; });
+    connect(enableParallelQueryCB, &QCheckBox::stateChanged, [this](int v) { dns.enableParallelQuery = v == Qt::Checked; });
+    connect(useSystemHostsCB, &QCheckBox::stateChanged, [this](int v) { dns.useSystemHosts = v == Qt::Checked; });
+    connect(serveStaleCB, &QCheckBox::stateChanged, [this](int v) { dns.serveStale = v == Qt::Checked; });
+    connect(serveExpiredTTLSB, QOverload<int>::of(&QSpinBox::valueChanged), [this](int v) { dns.serveExpiredTTL = v; });
+    connect(domainMatcherCB, &QComboBox::currentTextChanged, [this](const QString &v) { dns.domainMatcher = v; });
+    connect(cacheStrategyCB, &QComboBox::currentTextChanged, [this](const QString &v) { dns.cacheStrategy = v; });
+    connect(fallbackStrategyCB, &QComboBox::currentTextChanged, [this](const QString &v) { dns.fallbackStrategy = v; });
+    advancedDnsGroup->setObjectName("advancedDnsGroup");
+    disableFallbackIfMatchCB->setObjectName("disableFallbackIfMatchCB");
+    enableParallelQueryCB->setObjectName("enableParallelQueryCB");
+    useSystemHostsCB->setObjectName("useSystemHostsCB");
+    serveStaleCB->setObjectName("serveStaleCB");
+    serveExpiredTTLSB->setObjectName("serveExpiredTTLSB");
+    domainMatcherCB->setObjectName("domainMatcherCB");
+    cacheStrategyCB->setObjectName("cacheStrategyCB");
+    fallbackStrategyCB->setObjectName("fallbackStrategyCB");
+
     UPDATE_UI_ENABLED_STATE;
     updateColorScheme();
 }
@@ -96,14 +145,46 @@ void DnsSettingsWidget::SetDNSObject(const DNSObject &_dns, const FakeDNSObject 
     {
         const auto rowId = staticResolvedDomainsTable->rowCount();
         staticResolvedDomainsTable->insertRow(rowId);
+        QString value;
+        if (ip.value.isArray())
+        {
+            QStringList values;
+            for (const auto &item : ip.value.toArray())
+                values << item.toString();
+            value = values.join(", ");
+        }
+        else
+        {
+            value = ip.value.toString();
+        }
         staticResolvedDomainsTable->setItem(rowId, 0, new QTableWidgetItem(host));
-        staticResolvedDomainsTable->setItem(rowId, 1, new QTableWidgetItem(ip));
+        staticResolvedDomainsTable->setItem(rowId, 1, new QTableWidgetItem(value));
     }
     staticResolvedDomainsTable->resizeColumnsToContents();
 
     dnsQueryStrategyCB->setCurrentText(dns.queryStrategy);
     dnsDisableFallbackCB->setChecked(dns.disableFallback);
     dnsDisableCacheCB->setChecked(dns.disableCache);
+    if (const auto groups = findChildren<QGroupBox *>("advancedDnsGroup"); !groups.isEmpty())
+    {
+        const auto group = groups.first();
+        if (const auto w = group->findChild<QCheckBox *>("disableFallbackIfMatchCB"))
+            w->setChecked(dns.disableFallbackIfMatch);
+        if (const auto w = group->findChild<QCheckBox *>("enableParallelQueryCB"))
+            w->setChecked(dns.enableParallelQuery);
+        if (const auto w = group->findChild<QCheckBox *>("useSystemHostsCB"))
+            w->setChecked(dns.useSystemHosts);
+        if (const auto w = group->findChild<QCheckBox *>("serveStaleCB"))
+            w->setChecked(dns.serveStale);
+        if (const auto w = group->findChild<QSpinBox *>("serveExpiredTTLSB"))
+            w->setValue(dns.serveExpiredTTL);
+        if (const auto w = group->findChild<QComboBox *>("domainMatcherCB"))
+            w->setCurrentText(dns.domainMatcher);
+        if (const auto w = group->findChild<QComboBox *>("cacheStrategyCB"))
+            w->setCurrentText(dns.cacheStrategy);
+        if (const auto w = group->findChild<QComboBox *>("fallbackStrategyCB"))
+            w->setCurrentText(dns.fallbackStrategy);
+    }
 
     fakeDNSIPPool->setCurrentText(fakeDNS.ipPool);
     fakeDNSIPPoolSize->setValue(fakeDNS.poolSize);
@@ -160,7 +241,20 @@ std::pair<DNSObject, FakeDNSObject> DnsSettingsWidget::GetDNSObject()
         const auto &item1 = staticResolvedDomainsTable->item(i, 0);
         const auto &item2 = staticResolvedDomainsTable->item(i, 1);
         if (item1 && item2)
-            dns.hosts[item1->text()] = item2->text();
+        {
+            const auto value = item2->text().trimmed();
+            if (value.contains(",")) // comma separated address list
+            {
+                QJsonArray array;
+                for (const auto &part : value.split(","))
+                    array.append(part.trimmed());
+                dns.hosts[item1->text()] = array;
+            }
+            else
+            {
+                dns.hosts[item1->text()] = value;
+            }
+        }
     }
     return { dns, fakeDNS };
 }

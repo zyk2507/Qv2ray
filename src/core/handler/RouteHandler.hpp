@@ -27,8 +27,12 @@ namespace Qv2ray::core::handler
         OUTBOUNDS ExpandExternalConnection(const OUTBOUNDS &outbounds) const;
         //
         // Final Config Generation
-        CONFIGROOT GenerateFinalConfig(const ConnectionGroupPair &pair, bool hasAPI = true) const;
-        CONFIGROOT GenerateFinalConfig(CONFIGROOT root, const GroupRoutingId &routingId, bool hasAPI = true) const;
+        CONFIGROOT GenerateFinalConfig(const ConnectionGroupPair &pair, bool hasAPI = true,
+                                       Qv2rayCoreType coreType = CORE_AUTO,
+                                       Qv2rayCoreType *selectedCore = nullptr) const;
+        CONFIGROOT GenerateFinalConfig(CONFIGROOT root, const GroupRoutingId &routingId, bool hasAPI = true,
+                                       Qv2rayCoreType coreType = CORE_AUTO,
+                                       Qv2rayCoreType *selectedCore = nullptr) const;
         //
         bool ExpandChainedOutbounds(CONFIGROOT &) const;
 
