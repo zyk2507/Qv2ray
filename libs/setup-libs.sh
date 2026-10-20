@@ -1,37 +1,47 @@
 #!/bin/bash
-mkdir -p deps; cd ./deps
-mkdir -p downloaded; cd ./downloaded;
+# Download and unpack the prebuilt Windows dependencies used by the Qv2ray
+# Windows builds.  Keep this independent of the GitHub API: an API hiccup or
+# rate limit used to leave the dependency directory empty, which later showed
+# up as a confusing "Could NOT find CURL" CMake error.
+set -euo pipefail
 
-DEPS_OS=$1
-DEPS_CATEGORY=$2
+DEPS_OS=${1:?Usage: setup-libs.sh <windows> <x64>}
+DEPS_CATEGORY=${2:?Usage: setup-libs.sh <windows> <x64>}
 
-_JSON=$(curl -s https://api.github.com/repos/Qv2ray/Qv2ray-deps/releases/latest | jq ".assets[] | {browser_download_url, name}" -c | grep "$DEPS_CATEGORY-$DEPS_OS")
+SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+WORK_DIR="$SCRIPT_DIR/deps"
+DOWNLOAD_DIR="$WORK_DIR/downloaded"
+TARGET_DIR="$SCRIPT_DIR/${DEPS_CATEGORY}-${DEPS_OS}"
+RELEASE_URL="https://github.com/Qv2ray/Qv2ray-deps/releases/download/release"
 
-echo $_JSON
+rm -rf "$WORK_DIR"
+mkdir -p "$DOWNLOAD_DIR"
+cd "$DOWNLOAD_DIR"
 
-for data in $(echo $_JSON)
-do
-    NAME=$(echo $data | jq ".name" -r)
+for component in curl grpc openssl; do
+    NAME="${component}-${DEPS_CATEGORY}-${DEPS_OS}.7z"
     echo "Downloading: $NAME"
-    curl -sL $(echo $data | jq ".browser_download_url" -r) -o $NAME;
+    curl -fL --retry 5 --retry-delay 3 --retry-all-errors "$RELEASE_URL/$NAME" -o "$NAME"
+    test -s "$NAME"
+    7z x -y "$NAME"
 done
 
-cd ..
-
-for f in $(ls ./downloaded | grep $DEPS_OS)
-do
-    7z x -y ./downloaded/$f
-done
-
-if [[ "$DEPS_CATEGORY" == "tools" ]]; then
-    mkdir -p ../tools
-    cp -rvf ./tools ../
-    rm -rvf ./tools
-else
-    echo "Cleaning up $DEPS_CATEGORY-$DEPS_OS"
-    rm -rvf ../$DEPS_CATEGORY-$DEPS_OS/*
-    mkdir -p ../$DEPS_CATEGORY-$DEPS_OS
-    cp -rvf ./$DEPS_OS-$DEPS_CATEGORY/installed/$DEPS_CATEGORY-$DEPS_OS/* ../$DEPS_CATEGORY-$DEPS_OS
-    rm -rvf ./$DEPS_OS-$DEPS_CATEGORY/
-    cd ..
+EXTRACTED_DIR="$DOWNLOAD_DIR/${DEPS_OS}-${DEPS_CATEGORY}"
+if [ ! -d "$EXTRACTED_DIR/installed/${DEPS_CATEGORY}-${DEPS_OS}" ]; then
+    echo "Dependency archive did not contain the expected ${DEPS_OS}-${DEPS_CATEGORY} layout." >&2
+    exit 1
 fi
+
+echo "Installing dependencies into: $TARGET_DIR"
+rm -rf "$TARGET_DIR"
+mkdir -p "$TARGET_DIR"
+cp -rvf "$EXTRACTED_DIR/installed/${DEPS_CATEGORY}-${DEPS_OS}/." "$TARGET_DIR/"
+
+# Fail at the setup step, not much later inside CMake, if an archive was
+# incomplete or extraction failed.
+test -s "$TARGET_DIR/include/curl/curl.h"
+test -s "$TARGET_DIR/lib/libcurl.lib"
+test -s "$TARGET_DIR/tools/protobuf/protoc.exe"
+
+rm -rf "$WORK_DIR"
+echo "Windows dependencies are ready."
