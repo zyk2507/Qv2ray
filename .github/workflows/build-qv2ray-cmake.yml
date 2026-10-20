@@ -13,7 +13,7 @@ jobs:
     outputs:
       commit_message: ${{ steps.get_message.outputs.message }}
     name: Check if the workflow has been disabled.
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v4
       - name: Get commit message
@@ -27,7 +27,7 @@ jobs:
     if: ${{ !contains( needs.check_commit_msg.outputs.commit_message, '!QT5') }}
     strategy:
       matrix:
-        platform: [ubuntu-20.04, macos-latest, windows-latest]
+        platform: [ubuntu-26.04, macos-latest, windows-latest]
         arch: [x64]
         build_type: [RelWithDebInfo, Release]
         qt_version: [5.15.0]
@@ -75,7 +75,7 @@ jobs:
           arch: ${{ matrix.qtarch }}
       # =========================================================================================================
       - name: Linux - ${{ matrix.qt_version }} - Build preparation - Install Packages
-        if: matrix.platform == 'ubuntu-20.04'
+        if: matrix.platform == 'ubuntu-26.04'
         run: |
           sudo apt update
           sudo apt install -y libgl-dev libx11-dev libxkbcommon-x11-dev libxcb-image0-dev libxcb-icccm4-dev libxcb-keysyms1 libxcb-render-util0 libxcb-xinerama0 \
@@ -105,14 +105,14 @@ jobs:
       - uses: actions/setup-node@v4
         if: matrix.platform == 'macos-latest'
         with:
-          node-version: "18.x"
+          node-version: "22.x"
       - run: npm install -g appdmg
         if: matrix.platform == 'macos-latest'
       - name: macOS - ${{ matrix.qt_version }} - Generate Dependencies and Build
         shell: bash
         if: matrix.platform == 'macos-latest'
         env:
-          PKG_CONFIG_PATH: /usr/local/opt/openssl@1.1/lib/pkgconfig
+          PKG_CONFIG_PATH: /opt/homebrew/opt/openssl@3/lib/pkgconfig:/usr/local/opt/openssl@3/lib/pkgconfig
         run: |
           mkdir build
           cd build
@@ -148,7 +148,7 @@ jobs:
           cp -v ./*.pdb ./deployment || true
       # --------------------------------------------------------
       - name: Linux - ${{ matrix.qt_version }} - Generate Dependencies and Build
-        if: matrix.platform == 'ubuntu-20.04'
+        if: matrix.platform == 'ubuntu-26.04'
         shell: bash
         run: |
           mkdir build
@@ -163,30 +163,35 @@ jobs:
           cmake --install .
       # ========================================================================================================= Deployments
       - name: Linux - ${{ matrix.qt_version }} - Generating AppImage
-        if: matrix.platform == 'ubuntu-20.04'
+        if: matrix.platform == 'ubuntu-26.04'
         run: |
           cd build
           cd AppDir
           mkdir -p ./usr/lib/
-          cp -fv /usr/lib/x86_64-linux-gnu/{libssl.so.1.1,libcrypto.so.1.1} ./usr/lib/
+          for lib in libssl.so.3 libcrypto.so.3 libssl.so.1.1 libcrypto.so.1.1; do
+            if [ -e "/usr/lib/x86_64-linux-gnu/$lib" ]; then
+              cp -fv "/usr/lib/x86_64-linux-gnu/$lib" ./usr/lib/
+            fi
+          done
           cd ..
           wget https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage
           chmod +x ./linuxdeployqt-continuous-x86_64.AppImage
           ./linuxdeployqt-continuous-x86_64.AppImage AppDir/usr/share/applications/qv2ray.desktop \
+              -unsupported-allow-new-glibc \
               -appimage \
               -no-strip \
               -always-overwrite \
               -extra-plugins=iconengines,imageformats,platforminputcontexts
           mv ./Qv2ray*.AppImage ./Qv2ray.AppImage
       - name: Linux - ${{ matrix.qt_version }} - Uploading Artifact
-        if: matrix.platform == 'ubuntu-20.04'
+        if: matrix.platform == 'ubuntu-26.04'
         uses: actions/upload-artifact@v4
         with:
           name: Qv2ray-${{ github.sha }}.linux-${{ matrix.arch }}.qt${{ matrix.qt_version }}-${{ matrix.build_type }}.AppImage
           path: build/Qv2ray.AppImage
       - name: Linux - ${{ matrix.qt_version }} - Upload binaries to release
         uses: svenstaro/upload-release-action@v2
-        if: github.event_name == 'release' && matrix.platform == 'ubuntu-20.04' && matrix.qt_version == '5.15.0' && matrix.build_type == 'Release'
+        if: github.event_name == 'release' && matrix.platform == 'ubuntu-26.04' && matrix.qt_version == '5.15.0' && matrix.build_type == 'Release'
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: build/Qv2ray.AppImage

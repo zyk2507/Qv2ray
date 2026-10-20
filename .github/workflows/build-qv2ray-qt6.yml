@@ -28,7 +28,7 @@ jobs:
     strategy:
       matrix:
         ui_type: [QWidget]
-        platform: [ubuntu-20.04, windows-latest]
+        platform: [ubuntu-26.04, windows-latest]
         build_type: [RelWithDebInfo, Release]
         qt_version: [6.5.0]
         include:
@@ -75,7 +75,7 @@ jobs:
           arch: ${{ matrix.qtarch }}
       # =========================================================================================================
       - name: Linux - ${{ matrix.qt_version }} - Build preparation - Install Packages
-        if: matrix.platform == 'ubuntu-20.04'
+        if: matrix.platform == 'ubuntu-26.04'
         run: |
           #sudo add-apt-repository ppa:webispy/grpc
           #sudo add-apt-repository ppa:carsten-uppenbrink-net/openssl
@@ -110,14 +110,14 @@ jobs:
       - uses: actions/setup-node@v4
         if: matrix.platform == 'macos-latest'
         with:
-          node-version: "18.x"
+          node-version: "22.x"
       - run: npm install -g appdmg
         if: matrix.platform == 'macos-latest'
       - name: macOS - ${{ matrix.qt_version }} - Generate Dependencies and Build
         shell: bash
         if: matrix.platform == 'macos-latest'
         env:
-          PKG_CONFIG_PATH: /usr/local/opt/openssl@1.1/lib/pkgconfig
+          PKG_CONFIG_PATH: /opt/homebrew/opt/openssl@3/lib/pkgconfig:/usr/local/opt/openssl@3/lib/pkgconfig
         run: |
           mkdir build
           cd build
@@ -155,7 +155,7 @@ jobs:
           cp -v ./*.pdb ./deployment || true
       # --------------------------------------------------------
       - name: Linux - ${{ matrix.qt_version }} - Generate Dependencies and Build
-        if: matrix.platform == 'ubuntu-20.04'
+        if: matrix.platform == 'ubuntu-26.04'
         shell: bash
         run: |
           mkdir build
@@ -171,7 +171,7 @@ jobs:
           cmake --install .
       # ========================================================================================================= Deployments
       - name: Linux - ${{ matrix.qt_version }} - Generating AppImage
-        if: false #matrix.platform == 'ubuntu-20.04'
+        if: false #matrix.platform == 'ubuntu-26.04'
         run: |
           cd build
           cd AppDir
@@ -183,7 +183,11 @@ jobs:
           chmod a+x AppRun
           cp -fv /usr/lib/x86_64-linux-gnu/libstdc++.so.6 ./usr/optional/libstdc++/
           cp -fv /lib/x86_64-linux-gnu/libgcc_s.so.1 ./usr/optional/libgcc_s/
-          cp -fv /usr/lib/x86_64-linux-gnu/{libssl.so.1.1,libcrypto.so.1.1} ./usr/lib/
+          for lib in libssl.so.3 libcrypto.so.3 libssl.so.1.1 libcrypto.so.1.1; do
+            if [ -e "/usr/lib/x86_64-linux-gnu/$lib" ]; then
+              cp -fv "/usr/lib/x86_64-linux-gnu/$lib" ./usr/lib/
+            fi
+          done
           cd ..
           wget https://github.com/probonopd/linuxdeployqt/releases/download/6/linuxdeployqt-6-x86_64.AppImage
           chmod +x ./linuxdeployqt-6-x86_64.AppImage
@@ -195,14 +199,14 @@ jobs:
             -extra-plugins=iconengines,imageformats,platforminputcontexts
           mv ./Qv2ray*.AppImage ./Qv2ray.AppImage
       - name: Linux - ${{ matrix.qt_version }} - Uploading Artifact
-        if: false #matrix.platform == 'ubuntu-20.04'
+        if: false #matrix.platform == 'ubuntu-26.04'
         uses: actions/upload-artifact@v4
         with:
           name: Qv2ray-${{ github.sha }}.linux-${{ matrix.ui_type }}.qt${{ matrix.qt_version }}-${{ matrix.build_type }}.AppImage
           path: build/Qv2ray.AppImage
       - name: Linux - ${{ matrix.qt_version }} - Upload binaries to release
         uses: svenstaro/upload-release-action@v2
-        if: false #github.event_name == 'release' && matrix.platform == 'ubuntu-20.04' && matrix.ui_type == 'QWidget' && matrix.qt_version == '6.0.0' && matrix.build_type == 'Release'
+        if: false #github.event_name == 'release' && matrix.platform == 'ubuntu-26.04' && matrix.ui_type == 'QWidget' && matrix.qt_version == '6.0.0' && matrix.build_type == 'Release'
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: build/Qv2ray.AppImage
